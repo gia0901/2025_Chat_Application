@@ -1,5 +1,5 @@
 #include "MasterPeer.hpp"
-
+#include "utils.hpp"
 
 MasterPeer::MasterPeer()
 {
@@ -20,14 +20,47 @@ int MasterPeer::init(int portNum)
 {
     int ret = 0;
 
+    if (masterPeer == nullptr)
+    {
+        masterPeer = new Peer();
+    }
+
     // 0. Init mutex
     masterMutex = PTHREAD_MUTEX_INITIALIZER;
 
     // 1. Init socket
+    masterPeer->portNum = portNum;
+    masterPeer->sockfd = socket(AF_INET, SOCK_STREAM, 0);   // Internet socket - Stream
+    if (masterPeer->sockfd < 0)
+    {
+        APP_DEBUG_PRINT("Create socket for MasterPeer failed.");
+        return -1;
+    }
+    
+    // 2. Init address structure 
+    //    Socket will be binded to this, so that other apps can find and connect to the socket.
+    masterPeer->addr.sin_family = AF_INET;
+    masterPeer->addr.sin_addr.s_addr = INADDR_ANY;
+    masterPeer->addr.sin_port = htons(masterPeer->portNum);
 
-    // 2.
 
-    // 3. 
+    // 3. Bind socket to the address
+    ret = bind(masterPeer->sockfd, (struct sockaddr*)&masterPeer->addr, sizeof(masterPeer->addr));
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Bind socket for MasterPeer failed.");
+        return -1;
+    }
+
+    // 4. Start to listening for other sockets
+    ret = listen(masterPeer->sockfd, MAX_CONNECTIONS);
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Listen on MasterPeer failed");
+        return -1;
+    }
+
+    APP_INFO_PRINT("Init MasterPeer successfully.");
 
     return ret;   
 }
