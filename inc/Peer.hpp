@@ -7,14 +7,19 @@
 
 #include "defines.hpp"
 
+// Socket file descriptor
+typedef struct SocketFD
+{
+    int domain;  
+    int type;
+    int protocol;
+}sfd_t;
 
 class Peer
 {
-public:
-    Peer();
-    
+private:
     int sockfd;
-    
+    sfd_t sock_config;
     int id;
     
     int portNum;
@@ -25,6 +30,18 @@ public:
     socklen_t addrSize = sizeof(addr);
     
     std::string addrInStr;
+
+public:
+    Peer();
+
+    int InitSocket(void);
+    int GetSockFD(void);
+    void SetSockFD(int sockfd);
+    void SetPortNum(int portNum);
+    void InitAddr(void);
+    int BindSocket(void);
+    int ListenSocket(void);
+    int AcceptSocket(int master);
 };
 
 #endif // _PEER_HPP_
