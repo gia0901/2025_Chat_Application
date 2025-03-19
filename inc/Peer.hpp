@@ -12,11 +12,18 @@ class Peer
 {
 public:
     Peer();
+    
     int sockfd;
+    
     int id;
+    
     int portNum;
+
+    // sockaddr_in: internet address in ipv4
     struct sockaddr_in addr;
+
     socklen_t addrSize = sizeof(addr);
+    
     std::string addrInStr;
 };
 

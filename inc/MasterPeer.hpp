@@ -26,14 +26,18 @@ public:
 
     int terminatePeer(unsigned int id);
 
-    int mutex_lock(void);
+    int getSockFd(void);
 
-    int mutex_unlock(void);
+    int mutexLock(void);
+
+    int mutexUnlock(void);
 
     void listPeer(void);
 
     pthread_t* getListenerThreadID(void);
-
 };
+
+
+void* thd_listenForPeers(void* args);
 
 #endif // _MASTER_PEER_HPP_
