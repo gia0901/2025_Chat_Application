@@ -1,9 +1,24 @@
 #include "MasterPeer.hpp"
 #include "utils.hpp"
 
+
+#define IS_MASTER_PEER_CREATED()    do { \
+                                        if (masterPeer == nullptr) { \
+                                            masterPeer = new Peer(); \
+                                        } \
+                                        else { \
+                                            APP_INFO_PRINT("masterPeer is already created."); \
+                                        } \
+                                    } while(0)
+
 MasterPeer::MasterPeer()
 {
-
+    // 1. Allocate Master Peer
+    if (masterPeer == nullptr)
+        masterPeer = new Peer();
+    
+    // 2. Init Mutex
+    masterMutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
 // Singleton
@@ -13,21 +28,16 @@ MasterPeer* MasterPeer::getInstance(void)
 {
     if (pInstance == nullptr)
         pInstance = new MasterPeer();
+
     return pInstance;
 }
 
-int MasterPeer::init(int portNum)
+int MasterPeer::initSocket(int portNum)
 {
     int ret = 0;
 
-    if (masterPeer == nullptr)
-    {
-        masterPeer = new Peer();
-    }
-
-    // 0. Init mutex
-    masterMutex = PTHREAD_MUTEX_INITIALIZER;
-
+    IS_MASTER_PEER_CREATED();
+    
     // 1. Init socket
     masterPeer->portNum = portNum;
     masterPeer->sockfd = socket(AF_INET, SOCK_STREAM, 0);   // Internet socket - Stream
@@ -60,7 +70,7 @@ int MasterPeer::init(int portNum)
         return -1;
     }
 
-    APP_INFO_PRINT("Init MasterPeer successfully.");
+    APP_INFO_PRINT("Init socket for MasterPeer successfully.");
 
     return ret;   
 }

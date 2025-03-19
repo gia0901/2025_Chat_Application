@@ -9,6 +9,7 @@
 #define MAX_BACKLOGS        MAX_CONNECTIONS // ?? What is backlog
 
 
+#define PROCESS_COMM_DIR    "/proc/self/comm"   // Read this for Process Name (Comm)
 
 
 #endif // _DEFINES_HPP_

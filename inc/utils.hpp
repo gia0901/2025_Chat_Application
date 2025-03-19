@@ -11,7 +11,7 @@
 #define APP_INFO_PRINT(fmt,...)     do { \
                                         if (ENABLE_INFO_PRINT) { \
                                             printf("[info][%s]: " fmt, __func__, ##__VA_ARGS__); \
-                                            printf("\n"); \
+                                            printf("  [pid:%d][comm:%s]\n", getPID(), getComm()); \
                                         } \
                                     } while(0)
 
@@ -21,6 +21,8 @@
                                             printf("  [pid:%d][comm:%s]\n", getPID(), getComm()); \
                                         } \
                                     } while(0)
+
+void        clearScreen(void);
 
 int         getPID(void);
 

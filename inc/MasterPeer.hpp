@@ -18,7 +18,7 @@ public:
 
     static MasterPeer* getInstance(void);
 
-    int init(int portNum);
+    int initSocket(int portNum);
 
     int addPeer(Peer peer);
 
