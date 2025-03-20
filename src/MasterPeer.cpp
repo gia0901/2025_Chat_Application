@@ -42,8 +42,8 @@ int MasterPeer::initSocket(int portNum)
     mutexLock();
 
     /* 1. Init socket */ 
-    masterPeer->SetPortNum(portNum); // Set port number
-    ret = masterPeer->InitSocket();  // Internet socket - Stream          
+    masterPeer->setPortNum(portNum); // Set port number
+    ret = masterPeer->initSocket();  // Internet socket - Stream          
     
     if (ret < 0)
     {
@@ -53,10 +53,10 @@ int MasterPeer::initSocket(int portNum)
     }
     
     /*2. Init address structure */ 
-    ret = masterPeer->InitSocket(); // Socket will be binded to this, so that other apps can find and connect to the socket
+    ret = masterPeer->initSocket(); // Socket will be binded to this, so that other apps can find and connect to the socket
 
     /* 3. Bind socket to the address */ 
-    ret = masterPeer->BindSocket();
+    ret = masterPeer->bindSocket();
 
     if (ret < 0)
     {
@@ -66,7 +66,7 @@ int MasterPeer::initSocket(int portNum)
     }
 
     /* 4. Start to listening for other sockets */ 
-    ret = masterPeer->ListenSocket();
+    ret = masterPeer->listenSocket();
     
     if (ret < 0)
     {
@@ -132,7 +132,7 @@ int MasterPeer::mutexUnlock(void)
 
 int MasterPeer::getMasterSockFd(void)
 {
-    return masterPeer->GetSockFD();
+    return masterPeer->getSockFD();
 }
 
 pthread_t* MasterPeer::getListenerThreadID(void)
@@ -148,10 +148,10 @@ void* thd_listenForPeers(void* args)
     while (1)
     {
         int temp = 0;
-        temp = (new_peer.AcceptSocket(masterPeer->getMasterSockFd()));
-        new_peer.SetSockFD(temp);
+        temp = (new_peer.acceptSocket(masterPeer->getMasterSockFd()));
+        new_peer.setSockFD(temp);
 
-        if (new_peer.GetSockFD() < 0)
+        if (new_peer.getSockFD() < 0)
         {
             APP_DEBUG_PRINT("accept new peer socket failed. Continue to listen for a new socket...");
             continue;

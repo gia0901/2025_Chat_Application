@@ -34,14 +34,14 @@ private:
 public:
     Peer();
 
-    int InitSocket(void);
-    int GetSockFD(void);
-    void SetSockFD(int sockfd);
-    void SetPortNum(int portNum);
-    void InitAddr(void);
-    int BindSocket(void);
-    int ListenSocket(void);
-    int AcceptSocket(int master);
+    int initSocket(void);
+    int getSockFD(void);
+    void setSockFD(int sockfd);
+    void setPortNum(int portNum);
+    void initAddr(void);
+    int bindSocket(void);
+    int listenSocket(void);
+    int acceptSocket(int master);
 };
 
 #endif // _PEER_HPP_
