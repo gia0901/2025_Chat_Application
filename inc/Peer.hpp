@@ -21,14 +21,10 @@ private:
     int sockfd;
     sfd_t sock_config;
     int id;
-    
     int portNum;
-
     // sockaddr_in: internet address in ipv4
     struct sockaddr_in addr;
-
     socklen_t addrSize = sizeof(addr);
-    
     std::string addrInStr;
 
 public:
@@ -38,10 +34,14 @@ public:
     int getSockFD(void);
     void setSockFD(int sockfd);
     void setPortNum(int portNum);
+    void setId(int id);
     void initAddr(void);
     int bindSocket(void);
     int listenSocket(void);
     int acceptSocket(int master);
+    void acceptConnection(std::vector<Peer> peerList);
+    void setAddr(struct sockaddr_in addr);
+    void setAddLenght(socklen_t addrSize);
 };
 
 #endif // _PEER_HPP_
