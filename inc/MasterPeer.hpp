@@ -28,10 +28,17 @@ public:
 
     int getMasterSockFd(void);
 
-    int mutexLock(void);
 
+    /* Communication */
+    int sendMessage(int id, std::string msg);
+    int receiveMessage(int id, std::string &msg)
+
+    /* Lock*/
+    int mutexLock(void);
     int mutexUnlock(void);
 
+
+    /* Utils */
     void listPeer(void);
 
     pthread_t* getListenerThreadID(void);

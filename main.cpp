@@ -31,13 +31,18 @@ int main(int argc, char* argv[])
     }
 
     // 3. Init Listener thread for MasterPeer (listen for other peers wanting to connect)
-
+    ret = pthread_create(masterPeer->getListenerThreadID(), NULL, thd_listenForPeers, NULL);
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Failed to create Listener Thread for MasterPeer.");
+    }
 
 
     // 4. Handle User Requests
+    while (1)
+    {
 
-
-    APP_DEBUG_PRINT("Hello from chat app!");
+    }
 
     return 0;
 }

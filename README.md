@@ -13,7 +13,13 @@
     - This peer can connect to any other peers outside, also can manage & maintain all the connected peers.
 
 
+3) Send and Receive message
+    - With sending, it's very easy, use the send() function to send a message to a peer.
+        API: send() / write()
 
+    - With receiving, it's another story, the receiver must wait until a message comes to it.
+    So with each child peer, Master should maintain a thread just for hearing.
+        API: read() / recv()
 
 99) Miscellaneous
     1. What is the relationship of IPv4 address & port? What does each other do?

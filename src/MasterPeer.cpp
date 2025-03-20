@@ -38,7 +38,6 @@ int MasterPeer::initSocket(int portNum)
 
     IS_MASTER_PEER_CREATED();
     
-    
     mutexLock();
 
     /* 1. Init socket */ 
@@ -94,12 +93,50 @@ int MasterPeer::addPeer(Peer peer)
 
     return ret;  
 }
+
 int MasterPeer::removePeer(Peer peer)
 {
     int ret = 0;
 
     return ret;  
 }
+
+int MasterPeer::sendMessage(int id, std::string msg)
+{
+    int ret = 0;
+
+    mutexLock();
+
+    ret = send(peerList[id].getSockFD(), msg.c_str(), msg.size(), 0);
+
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Sent message to peer id[%d] failed.", id);
+    }
+
+    mutexUnlock();
+
+    return ret;
+}
+
+int MasterPeer::receiveMessage(int id, std::string &msg)
+{
+    char readBuffer[MAX_MSG_SIZE];
+
+    /* This is a pending function */
+    ssize_t readBytes = recv(peerList[id].getSockFD(), readBuffer, MAX_MSG_SIZE, 0);
+
+    if (readBytes < 0)
+    {
+
+    }
+    else if (readBytes == 0)
+    {
+
+    }
+}
+
+
 int MasterPeer::terminatePeer(unsigned int id)
 {
     int ret = 0;

@@ -21,7 +21,6 @@ private:
     int sockfd;
     sfd_t sock_config;
     int id;
-    
     int portNum;
 
     // sockaddr_in: internet address in ipv4
