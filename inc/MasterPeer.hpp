@@ -26,7 +26,7 @@ public:
 
     int terminatePeer(unsigned int id);
 
-    int getSockFd(void);
+    int getMasterSockFd(void);
 
     int mutexLock(void);
 

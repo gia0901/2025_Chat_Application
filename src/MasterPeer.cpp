@@ -38,27 +38,26 @@ int MasterPeer::initSocket(int portNum)
 
     IS_MASTER_PEER_CREATED();
     
+    
     mutexLock();
 
-    // 1. Init socket
-    masterPeer->portNum = portNum;
-    masterPeer->sockfd = socket(AF_INET, SOCK_STREAM, 0);   // Internet socket - Stream
-    if (masterPeer->sockfd < 0)
+    /* 1. Init socket */ 
+    masterPeer->SetPortNum(portNum); // Set port number
+    ret = masterPeer->InitSocket();  // Internet socket - Stream          
+    
+    if (ret < 0)
     {
         APP_DEBUG_PRINT("Create socket for MasterPeer failed.");
         mutexUnlock();
         return -1;
     }
     
-    // 2. Init address structure 
-    //    Socket will be binded to this address struct, so that other apps can find and connect to the socket.
-    masterPeer->addr.sin_family = AF_INET;                  // Ipv4 address family
-    masterPeer->addr.sin_addr.s_addr = INADDR_ANY;          // Address: 0.0.0.0 -> Bind to ALL available network interfaces
-    masterPeer->addr.sin_port = htons(masterPeer->portNum); // Setup Port Number
+    /*2. Init address structure */ 
+    ret = masterPeer->InitSocket(); // Socket will be binded to this, so that other apps can find and connect to the socket
 
+    /* 3. Bind socket to the address */ 
+    ret = masterPeer->BindSocket();
 
-    // 3. Bind socket to the address
-    ret = bind(masterPeer->sockfd, (struct sockaddr*)&masterPeer->addr, sizeof(masterPeer->addr));
     if (ret < 0)
     {
         APP_DEBUG_PRINT("Bind socket for MasterPeer failed.");
@@ -66,8 +65,9 @@ int MasterPeer::initSocket(int portNum)
         return -1;
     }
 
-    // 4. Start to listening for other sockets
-    ret = listen(masterPeer->sockfd, MAX_CONNECTIONS);
+    /* 4. Start to listening for other sockets */ 
+    ret = masterPeer->ListenSocket();
+    
     if (ret < 0)
     {
         APP_DEBUG_PRINT("Listen on MasterPeer failed");
@@ -130,9 +130,9 @@ int MasterPeer::mutexUnlock(void)
     return pthread_mutex_unlock(&masterMutex);
 }
 
-int MasterPeer::getSockFd(void)
+int MasterPeer::getMasterSockFd(void)
 {
-    return masterPeer->sockfd;
+    return masterPeer->GetSockFD();
 }
 
 pthread_t* MasterPeer::getListenerThreadID(void)
@@ -147,8 +147,11 @@ void* thd_listenForPeers(void* args)
 
     while (1)
     {
-        new_peer.sockfd = accept(masterPeer->getSockFd(), (struct sockaddr*)&new_peer.addr, &new_peer.addrSize);
-        if (new_peer.sockfd < 0)
+        int temp = 0;
+        temp = (new_peer.AcceptSocket(masterPeer->getMasterSockFd()));
+        new_peer.SetSockFD(temp);
+
+        if (new_peer.GetSockFD() < 0)
         {
             APP_DEBUG_PRINT("accept new peer socket failed. Continue to listen for a new socket...");
             continue;
