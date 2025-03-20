@@ -28,9 +28,14 @@ public:
 
     int getMasterSockFd(void);
 
+    /* Locking */
     int mutexLock(void);
 
     int mutexUnlock(void);
+
+    /* Communicating */
+    int sendMessage(int id, std::string msg);
+    std::string receiveMessage(int id);
 
     void listPeer(void);
 

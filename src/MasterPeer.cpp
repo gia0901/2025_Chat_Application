@@ -107,6 +107,38 @@ int MasterPeer::terminatePeer(unsigned int id)
     return ret;  
 }
 
+int MasterPeer::sendMessage(int id, std::string msg)
+{
+    int ret = 0;
+
+    ret = send(peerList[id].getSockFD(), (void*)msg.c_str(), (size_t)msg.size(), 0);
+
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Failed to send message to Peer ID[%d]", id);
+    }
+    return ret;
+}
+
+std::string MasterPeer::receiveMessage(int id)
+{
+    std::string result;
+    int readBytes;
+    char readBuff[MAX_MSG_SIZE];
+
+    /* Pending function */
+    readBytes = recv(peerList[id].getSockFD(), readBuff, MAX_MSG_SIZE, 0);
+    if (readBytes < 0)
+    {
+
+    }
+    else
+    {
+        result = readBuff;
+    }
+    return result;
+}
+
 void MasterPeer::listPeer(void)
 {
     if (peerList.empty())
