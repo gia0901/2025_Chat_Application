@@ -1,24 +1,38 @@
-.PHONY: all, clean
+# Compiler
+CC = g++
 
 # Project name
 PRJ_NAME := chat_app
 
 # Directories
-SRC_DIR := $(PWD)/src
-INC_DIR := $(PWD)/inc
+INC_DIR = inc
+SRC_DIR = src
 
-# Compiler
-CC = g++
+#Source files
+SOURCE = main.cpp $(wildcard $(SRC_DIR)/*.cpp)
 
-# Flags
-CFLAGS := -Wall -lpthread -lrt
+# Compiler Flags
+CFLAGS := -Wall  -lrt -I$(INC_DIR)
 
-# Object
+# Linker Flags
+LFLAGS := -lpthread
 
+# Object files
+OBJ = $(SOURCE:.cpp=.o)
 
-# Build
-all:
-	$(CC) main.cpp $(SRC_DIR)/*.cpp -I$(INC_DIR) $(CFLAGS) -o $(PRJ_NAME)
+# Link oject files to executable
+$(PRJ_NAME): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LFLAGS)
 
+# Compile source files
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Default target
+all: $(PRJ_NAME)
+
+# Clean object files
 clean:
-	rm -rf $(PRJ_NAME)
+	rm -f $(OBJ) $(PRJ_NAME)
+
+.PHONY: all, clean
