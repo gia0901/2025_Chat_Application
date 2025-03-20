@@ -17,6 +17,11 @@ int Peer::initSocket(void)
     return sockfd;
 }
 
+void Peer::setId(int id)
+{
+    id = id;
+}
+
 int Peer::getSockFD(void)
 {
     return sockfd;
@@ -30,6 +35,16 @@ void Peer::setSockFD(int sockfd)
 void Peer::setPortNum(int portNum)
 {
     portNum = portNum;
+}
+
+void Peer::setAddr(struct sockaddr_in addr)
+{
+    addr = addr;
+}
+
+void Peer::setAddLenght(socklen_t addrSize)
+{
+    addrSize = addrSize;
 }
 
 void Peer::initAddr(void)
@@ -64,4 +79,29 @@ int Peer::acceptSocket(int masterSockFd)
     ret = accept(masterSockFd, (struct sockaddr*)&addr, &addrSize);
 
     return ret;
+}
+
+void Peer::acceptConnection(std::vector<Peer> peerList)
+{
+    /* Local variables */ 
+    char addr_in_str[INET_ADDRSTRLEN];
+    int port = ntohs(addr.sin_port);
+    static int peerIndex = 0;
+
+    /* Convert IP address from network byte order to string */
+    inet_ntop(AF_INET, &addr.sin_addr, addr_in_str, INET_ADDRSTRLEN);
+
+    peerList[peerIndex].setSockFD(sockfd);
+    peerList[peerIndex].setId(peerIndex);
+    peerList[peerIndex].setPortNum(port);
+    peerList[peerIndex].setAddr(addr);
+    peerList[peerIndex].setAddLenght(addrSize);
+
+    if(peerIndex == MAX_CONNECTIONS)
+    {
+        APP_DEBUG_PRINT("Max number of connections reached.");
+        return;
+    }
+
+    peerIndex++;
 }

@@ -41,6 +41,8 @@ public:
     /* Utils */
     void listPeer(void);
 
+    std::vector<Peer> getPeerList(void);
+
     pthread_t* getListenerThreadID(void);
 };
 

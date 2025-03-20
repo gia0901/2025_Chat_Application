@@ -2,13 +2,13 @@
 #include "utils.hpp"
 
 
-#define IS_MASTER_PEER_CREATED()    do { \
-                                        if (masterPeer == nullptr) { \
-                                            masterPeer = new Peer(); \
-                                        } \
-                                        else { \
+#define IS_MASTER_PEER_CREATED()    do {                                                      \
+                                        if (masterPeer == nullptr) {                          \
+                                            masterPeer = new Peer();                          \
+                                        }                                                     \
+                                        else {                                                \
                                             APP_INFO_PRINT("masterPeer is already created."); \
-                                        } \
+                                        }                                                     \
                                     } while(0)
 
 MasterPeer::MasterPeer()
@@ -177,10 +177,16 @@ pthread_t* MasterPeer::getListenerThreadID(void)
     return &listenerThread;
 }
 
+std::vector<Peer> MasterPeer::getPeerList(void)
+{
+    return peerList;
+}
+
 void* thd_listenForPeers(void* args)
 {
     Peer new_peer = Peer();
     MasterPeer *masterPeer = MasterPeer::getInstance();
+    
 
     while (1)
     {
@@ -196,6 +202,12 @@ void* thd_listenForPeers(void* args)
 
         // New peer has been accepted, now update the list.
         masterPeer->addPeer(new_peer);
+
+        // Accept connection from new peer
+        new_peer.acceptConnection(masterPeer->getPeerList());
     }
+
+
+
     return nullptr;
 }
