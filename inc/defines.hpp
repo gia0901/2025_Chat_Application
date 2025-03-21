@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 #include <string>
+#include <string.h>
 #include <vector>
+
 
 #define MAX_CONNECTIONS     10
 #define MAX_BACKLOGS        MAX_CONNECTIONS // ?? What is backlog

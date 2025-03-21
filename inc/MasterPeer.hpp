@@ -12,6 +12,7 @@ private:
     int totalPeers = 0;
     pthread_t listenerThread;
     pthread_mutex_t masterMutex;
+    pthread_t receiveMsgThread[MAX_CONNECTIONS];
 
 public:
     MasterPeer();
@@ -42,9 +43,13 @@ public:
     int connectToPeer(std::string addr, int portNum);
 
     /* Utils */
+    int* getTotalPeerPtr(void);
+
     void listPeer(void);
 
     pthread_t* getListenerThreadID(void);
+
+    pthread_t* getReceiveMsgThreadID(int id);
 
     Peer* getChildPeer(int id);
 
@@ -52,5 +57,7 @@ public:
 
 
 void* thd_listenForPeers(void* args);
+
+void* thd_receiveMsgFromPeer(void* args);
 
 #endif // _MASTER_PEER_HPP_
