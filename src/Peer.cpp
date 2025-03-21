@@ -24,12 +24,7 @@ int Peer::getSockFD(void)
 
 void Peer::setSockFD(int sockfd)
 {
-    sockfd = sockfd;
-}
-
-void Peer::setPortNum(int portNum)
-{
-    portNum = portNum;
+    this->sockfd = sockfd;
 }
 
 void Peer::initAddr(void)
@@ -59,9 +54,41 @@ int Peer::listenSocket(void)
 
 int Peer::acceptSocket(int masterSockFd)
 {
-    int ret = 0;
+    int new_sockfd = 0;
     
-    ret = accept(masterSockFd, (struct sockaddr*)&addr, &addrSize);
+    new_sockfd = accept(masterSockFd, (struct sockaddr*)&addr, &addrSize);
 
-    return ret;
+    this->sockfd = new_sockfd;
+
+    return new_sockfd;
+}
+
+int Peer::getID(void)
+{
+    return id;
+}
+
+void Peer::setID(int id)
+{
+    this->id = id;
+}
+
+std::string Peer::getAddrInStr(void)
+{
+    return addrInStr;
+}
+
+void Peer::setAddrInStr(std::string addr)
+{
+    this->addrInStr = addr;
+}
+
+int Peer::getPortNum(void)
+{
+    return portNum;
+}
+
+void Peer::setPortNum(int portNum)
+{
+    this->portNum = portNum;
 }
