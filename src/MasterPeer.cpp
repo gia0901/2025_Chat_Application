@@ -53,7 +53,7 @@ int MasterPeer::initSocket(int portNum)
     }
     
     /*2. Init address structure */ 
-    ret = masterPeer->initSocket(); // Socket will be binded to this, so that other apps can find and connect to the socket
+    masterPeer->initDefaultAddr(); // Socket will be binded to this, so that other apps can find and connect to the socket
 
     /* 3. Bind socket to the address */ 
     ret = masterPeer->bindSocket();

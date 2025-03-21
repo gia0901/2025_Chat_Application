@@ -12,27 +12,27 @@ int Peer::initSocket(void)
     sock_config.type     = SOCK_STREAM;
     sock_config.protocol = 0;
 
-    sockfd = socket(sock_config.domain, sock_config.type, sock_config.protocol);
+    this->sockfd = socket(sock_config.domain, sock_config.type, sock_config.protocol);
 
     return sockfd;
 }
 
 int Peer::getSockFD(void)
 {
-    return sockfd;
+    return this->sockfd;
 }
 
 void Peer::setSockFD(int sockfd)
 {
-    sockfd = sockfd;
+    this->sockfd = sockfd;
 }
 
 void Peer::setPortNum(int portNum)
 {
-    portNum = portNum;
+    this->portNum = portNum;
 }
 
-void Peer::initAddr(void)
+void Peer::initDefaultAddr(void)
 {
     addr.sin_family       = AF_INET;            // Ipv4 address family
     addr.sin_addr.s_addr  = INADDR_ANY;         // Address: 0.0.0.0 -> Bind to ALL available network interfaces

@@ -38,7 +38,7 @@ public:
     int getSockFD(void);
     void setSockFD(int sockfd);
     void setPortNum(int portNum);
-    void initAddr(void);
+    void initDefaultAddr(void);
     int bindSocket(void);
     int listenSocket(void);
     int acceptSocket(int master);
