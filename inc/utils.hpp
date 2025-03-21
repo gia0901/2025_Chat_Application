@@ -22,11 +22,14 @@
                                         } \
                                     } while(0)
 
+std::vector<std::string> readInput(void);
+
 void        clearScreen(void);
 
 int         getPID(void);
 
 const char* getComm(void);
+
 
 
 

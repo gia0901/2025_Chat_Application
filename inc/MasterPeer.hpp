@@ -40,7 +40,7 @@ public:
 
 
     /* Connection */
-    int connectToPeer(std::string addr, int portNum);
+    int connectToPeer(std::string addr, std::string portNum);
 
     /* Utils */
     int* getTotalPeerPtr(void);

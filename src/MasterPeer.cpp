@@ -188,7 +188,7 @@ pthread_t* MasterPeer::getListenerThreadID(void)
     return &listenerThread;
 }
 
-int MasterPeer::connectToPeer(std::string addr, int portNum)
+int MasterPeer::connectToPeer(std::string addr, std::string portNum)
 {
     int ret = 0;
 
