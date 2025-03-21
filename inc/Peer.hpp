@@ -19,13 +19,14 @@ class Peer
 {
 private:
     int sockfd;
+    
     sfd_t sock_config;
+
     int id;
     
     int portNum;
 
-    // sockaddr_in: internet address in ipv4
-    struct sockaddr_in addr;
+    struct sockaddr_in addr;    // sockaddr_in: internet address in ipv4
 
     socklen_t addrSize = sizeof(addr);
     
@@ -42,6 +43,15 @@ public:
     int bindSocket(void);
     int listenSocket(void);
     int acceptSocket(int master);
+
+    int getID(void);
+    void setID(int id);
+
+    std::string getAddrInStr(void);
+    void setAddrInStr(std::string addr);
+
+    int getPortNum(void);
+    void setPortNum(int portNum);
 };
 
 #endif // _PEER_HPP_

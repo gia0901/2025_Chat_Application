@@ -9,7 +9,7 @@ private:
     Peer* masterPeer;
     std::vector<Peer> peerList;
     static MasterPeer* pInstance;
-    unsigned int totalPeers = 0;
+    int totalPeers = 0;
     pthread_t listenerThread;
     pthread_mutex_t masterMutex;
 
@@ -20,7 +20,7 @@ public:
 
     int initSocket(int portNum);
 
-    int addPeer(Peer peer);
+    int updatePeerList(Peer peer);
 
     int removePeer(Peer peer);
 
@@ -37,9 +37,17 @@ public:
     int sendMessage(int id, std::string msg);
     std::string receiveMessage(int id);
 
+
+    /* Connection */
+    int connectToPeer(std::string addr, int portNum);
+
+    /* Utils */
     void listPeer(void);
 
     pthread_t* getListenerThreadID(void);
+
+    Peer* getChildPeer(int id);
+
 };
 
 
