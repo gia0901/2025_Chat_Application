@@ -53,7 +53,7 @@ int MasterPeer::initSocket(int portNum)
     }
     
     /*2. Init address structure */ 
-    ret = masterPeer->initSocket(); // Socket will be binded to this, so that other apps can find and connect to the socket
+    masterPeer->initAddr(); // Socket will be binded to this, so that other apps can find and connect to the socket
 
     /* 3. Bind socket to the address */ 
     ret = masterPeer->bindSocket();
@@ -191,6 +191,41 @@ pthread_t* MasterPeer::getListenerThreadID(void)
 int MasterPeer::connectToPeer(std::string addr, std::string portNum)
 {
     int ret = 0;
+    int port_num = std::stoi(portNum);
+
+    IS_MASTER_PEER_CREATED();
+
+    Peer *target_peer = new Peer();
+    target_peer->setAddrInStr(addr);
+    target_peer->setPortNum(port_num);
+
+    // Initialize the socket
+    ret = target_peer->initSocket();
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Failed to initialize socket for peer at addr[%s] port[%d]", addr.c_str(), port_num);
+        return -1;
+    }
+
+    // Set up the address structure
+    struct sockaddr_in peer_addr;
+    peer_addr.sin_family = AF_INET;
+    peer_addr.sin_port = htons(port_num);
+    if (inet_pton(AF_INET, addr.c_str(), &peer_addr.sin_addr) <= 0)
+    {
+        APP_DEBUG_PRINT("Invalid address/ Address not supported: %s", addr.c_str());
+        return -1;
+    }
+
+    APP_INFO_PRINT("Attempting to connect to peer at addr[%s] port[%d]", addr.c_str(), port_num);
+
+    // Attempt to connect to the peer
+    ret = connect(target_peer->getSockFD(), (struct sockaddr*)&peer_addr, sizeof(peer_addr));
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Failed to connect to peer at addr[%s] port[%d], error: %s", addr.c_str(), port_num, strerror(errno));
+        return -1;
+    }
 
     return ret;
 }
@@ -215,6 +250,8 @@ void* thd_listenForPeers(void* args)
     Peer new_peer = Peer();
     MasterPeer *masterPeer = MasterPeer::getInstance();
 
+    APP_INFO_PRINT("Thread create, waitting for Peer to connect");
+
     while (1)
     {
         int new_sockfd = new_peer.acceptSocket(masterPeer->getMasterSockFd());
@@ -231,7 +268,7 @@ void* thd_listenForPeers(void* args)
         int new_peer_id = ++*(pTotalPeers);
 
         // Update address and port num (for information purpose)
-
+        APP_INFO_PRINT("Connect success");
         // Update peer list
         masterPeer->updatePeerList(new_peer);
 
