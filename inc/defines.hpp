@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <string.h>
 #include <vector>
 #include <cstring>
 #include <sstream>

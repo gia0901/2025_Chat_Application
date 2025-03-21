@@ -109,7 +109,7 @@ int MasterPeer::terminatePeer(unsigned int id)
 
 Peer* MasterPeer::getChildPeer(int id)
 {
-    if (id < 0 || id >= totalPeers)
+    if (id < 0 || id > totalPeers)
     {
         APP_DEBUG_PRINT("ID[%d] is not in range. Please check!", id);
         return nullptr;
@@ -155,7 +155,7 @@ void MasterPeer::listPeer(void)
 
     if (peerList.empty())
     {
-        APP_DEBUG_PRINT("There is no peer on the list.");
+        APP_PRINT(" There is no peer on the list\n");
         return;
     }
     else
@@ -188,11 +188,26 @@ pthread_t* MasterPeer::getListenerThreadID(void)
     return &listenerThread;
 }
 
-int MasterPeer::connectToPeer(std::string addr, int portNum)
+int MasterPeer::connectToPeer(std::string addr, std::string portNum)
 {
     int ret = 0;
 
     return ret;
+}
+
+pthread_t* MasterPeer::getReceiveMsgThreadID(int id)
+{
+    if (id < 0 || id > totalPeers)
+    {
+        APP_DEBUG_PRINT("ID is not in range. Please check!");
+        return nullptr;
+    }
+    return &receiveMsgThread[id];
+}
+
+int* MasterPeer::getTotalPeerPtr(void)
+{
+    return &totalPeers;
 }
 
 void* thd_listenForPeers(void* args)
@@ -212,10 +227,53 @@ void* thd_listenForPeers(void* args)
 
         // New peer has been accepted.
         // Now update its information and add into the list
-        
+        int *pTotalPeers = masterPeer->getTotalPeerPtr();
+        int new_peer_id = ++*(pTotalPeers);
 
+        // Update address and port num (for information purpose)
 
+        // Update peer list
         masterPeer->updatePeerList(new_peer);
+
+        // Now new peer is a part of the list. Create a thread to receive message from it.
+        int ret = pthread_create(masterPeer->getReceiveMsgThreadID(new_peer_id), NULL, thd_receiveMsgFromPeer, &new_peer_id);
+        if (ret < 0)
+        {
+            APP_DEBUG_PRINT("failed to create thd_receiveMsgFromPeer for id[%d]", new_peer_id);
+        }
+    }
+
+    return nullptr;
+}
+
+void* thd_receiveMsgFromPeer(void* args)
+{
+    int* p_PeerID = (int*)args;
+
+    Peer* targetPeer = MasterPeer::getInstance()->getChildPeer(*p_PeerID);
+
+    char readBuff[MAX_MSG_SIZE] = {0};
+
+    while (1)
+    {
+        int readBytes = recv(targetPeer->getSockFD(), readBuff, MAX_MSG_SIZE, 0);
+
+        if (readBytes < 0)  // Error
+        {
+
+        }
+        else if (readBytes == 0) // ???
+        {
+
+        }
+        else
+        {
+            APP_PRINT("\n------------------------------------------\n");
+            APP_PRINT("- Received from addr[%s] - port[%d]\n", targetPeer->getAddrInStr().c_str(), targetPeer->getPortNum());
+            APP_PRINT("- Message: %s\n", readBuff);
+            APP_PRINT("------------------------------------------\n");
+        }
+        memset(readBuff, 0, MAX_MSG_SIZE);
     }
 
     return nullptr;

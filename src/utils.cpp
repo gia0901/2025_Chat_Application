@@ -43,6 +43,28 @@ const char* getComm(void)
     return proc_name;
 }
 
+std::vector<std::string> readInput(void)
+{
+    char cmd_buff[50];
+
+    std::vector<std::string> input;
+
+    if(fgets(cmd_buff,sizeof(cmd_buff),stdin) != NULL)
+    {
+        cmd_buff[strcspn(cmd_buff, "\n")] = 0;
+
+        std::istringstream ss(cmd_buff);
+        std::string token;
+
+        while (ss >> token)
+        {
+            input.push_back(token);
+        }
+    }
+
+    return input;
+}
+
 void clearScreen(void)
 {
     system("clear");
