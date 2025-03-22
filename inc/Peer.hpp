@@ -40,6 +40,11 @@ public:
     void setSockFD(int sockfd);
     
     void initAddr(void);
+    void setAddr(struct sockaddr_in addr);
+    struct sockaddr_in getAddr(void);
+    struct sockaddr_in* getAddrPtr(void);
+    int getAddrSize(void);
+
     int bindSocket(void);
     int listenSocket(void);
     int acceptSocket(int master);

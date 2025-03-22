@@ -14,5 +14,6 @@
 
 #define PROCESS_COMM_DIR    "/proc/self/comm"   // Read this for Process Name (Comm)
 
+#define IPV4_ADDR_LENGTH    16
 
 #endif // _DEFINES_HPP_
