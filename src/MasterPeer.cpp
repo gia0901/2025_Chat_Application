@@ -292,6 +292,7 @@ void* thd_listenForPeers(void* args)
         /* 2. New peer has been accepted. Update total peers */
         int *pTotalPeers = masterPeer->getTotalPeerPtr();
         int new_peer_id = *(pTotalPeers);
+        *(pTotalPeers)++; // update total peers
 
         /* 3. Convert port num from network-byte-order to integer for reading */
         int portNum = ntohs(new_peer.getAddr().sin_port);
