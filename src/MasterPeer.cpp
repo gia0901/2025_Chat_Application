@@ -182,6 +182,12 @@ pthread_t* MasterPeer::getListenerThreadID(void)
 
 int MasterPeer::connectToPeer(std::string addr, std::string portNum)
 {
+    if (totalPeers > MAX_CONNECTIONS)
+    {
+        APP_PRINT("\nPeerList is already full. Exiting now...\n");
+        return 0;
+    }
+    
     int ret = 0;
     int port_num = std::stoi(portNum);
 
