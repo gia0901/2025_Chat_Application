@@ -16,6 +16,9 @@ private:
 
 public:
     MasterPeer();
+    MasterPeer(const MasterPeer& source) = delete;  /* Delete copy-constructor */
+
+    ~MasterPeer();
 
     static MasterPeer* getInstance(void);
 

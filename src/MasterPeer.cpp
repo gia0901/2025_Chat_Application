@@ -12,7 +12,7 @@
                                         } \
                                     } while(0)
 
-MasterPeer::MasterPeer()
+MasterPeer::MasterPeer(void)
 {
     // 1. Allocate Master Peer
     if (masterPeer == nullptr)
@@ -24,6 +24,23 @@ MasterPeer::MasterPeer()
     // 3. Init variables
     totalPeers = 0;
 
+}
+
+MasterPeer::~MasterPeer(void)
+{
+    /* 1. Release Singleton instance */
+    if (pInstance != nullptr)
+    {
+        delete pInstance;
+        pInstance = nullptr;
+    }
+        
+    /* 2. Release Master Peer */
+    if (masterPeer != nullptr)
+    {
+        delete masterPeer;
+        masterPeer = nullptr;
+    }
 }
 
 // Singleton
