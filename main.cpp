@@ -73,8 +73,6 @@ int main(int argc, char* argv[])
         {
             masterPeer->listPeer();
         }
-        
-    
         else if (user_cmd[0] == "exit")
         {
             APP_PRINT("\nExiting app...\n");
