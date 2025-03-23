@@ -22,7 +22,7 @@ const char* getComm(void)
     if (fd < 0)
     {
         APP_DEBUG_PRINT("Cannot open file %s - Error number: %d", PROCESS_COMM_DIR, errno);
-        proc_name = "NAME_NOT_FOUND";
+        proc_name = "ERROR";
         return proc_name;
     }
 
@@ -30,7 +30,7 @@ const char* getComm(void)
     if (read_bytes < 0)
     {
         APP_DEBUG_PRINT("Cannot read file %s - Error number: %d", PROCESS_COMM_DIR, errno);
-        proc_name = "NAME_NOT_FOUND";
+        proc_name = "ERROR";
         return proc_name;
     }
 
@@ -43,6 +43,11 @@ const char* getComm(void)
     return proc_name;
 }
 
+const char* getThreadName(void)
+{
+    return "";
+}
+
 std::vector<std::string> readInput(void)
 {
     char cmd_buff[50];
@@ -51,16 +56,36 @@ std::vector<std::string> readInput(void)
 
     if(fgets(cmd_buff,sizeof(cmd_buff),stdin) != NULL)
     {
-        cmd_buff[strcspn(cmd_buff, "\n")] = 0;
+        //cmd_buff[strcspn(cmd_buff, "\n")] = 0;
 
         std::istringstream ss(cmd_buff);
         std::string token;
+        int tokenIdx = 0;
 
-        while (ss >> token)
+        while (ss >> token && tokenIdx < 2)
         {
             input.push_back(token);
+            tokenIdx++;
+            if (tokenIdx == 2)
+            {
+                std::getline(ss, token);
+                
+                /* First character is ' ', so remove it */
+                if (!token.empty())
+                    token.erase(token.begin());
+                
+                input.push_back(token);
+            }
         }
     }
+
+    /* Print all tokens (for debugging)*/
+    
+    // APP_PRINT("\n");
+    // for (std::string item : input)
+    // {
+    //     APP_DEBUG_PRINT("%s", item.c_str());
+    // }
 
     return input;
 }

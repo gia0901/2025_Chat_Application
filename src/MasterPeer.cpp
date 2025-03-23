@@ -322,6 +322,7 @@ void* thd_listenForPeers(void* args)
             APP_DEBUG_PRINT("failed to create thd_receiveMsgFromPeer for id[%d]", new_peer_id);
         }
     }
+
     APP_DEBUG_PRINT("Master Listener thread failed!!!");
     return nullptr;
 }
@@ -349,12 +350,14 @@ void* thd_receiveMsgFromPeer(void* args)
         else
         {
             APP_PRINT("\n----------------------------------------------------\n");
-            APP_PRINT("- Received from addr[%s] - port[%d]\n", targetPeer->getAddrInStr().c_str(), targetPeer->getPortNum());
+            APP_PRINT("- From addr[%s] - port[%d]\n", targetPeer->getAddrInStr().c_str(), targetPeer->getPortNum());
             APP_PRINT("- Message: %s\n", readBuff);
             APP_PRINT("----------------------------------------------------\n");
         }
         memset(readBuff, 0, MAX_MSG_SIZE);
     }
+
+    APP_DEBUG_PRINT("Thread received msg for ID[%d] failed", *p_PeerID);
 
     return nullptr;
 }

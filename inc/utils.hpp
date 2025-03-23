@@ -30,7 +30,7 @@ int         getPID(void);
 
 const char* getComm(void);
 
-
+const char* getThreadName(void);
 
 
 #endif // _UTILS_HPP_
