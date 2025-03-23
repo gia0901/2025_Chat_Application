@@ -78,6 +78,26 @@ void Peer::setID(int id)
     this->id = id;
 }
 
+
+void Peer::setAddr(struct sockaddr_in addr)
+{
+    this->addr = addr;
+}
+
+struct sockaddr_in Peer::getAddr(void)
+{
+    return this->addr;
+}
+
+int Peer::getAddrSize(void)
+{
+    return sizeof(addr);
+}
+struct sockaddr_in* Peer::getAddrPtr(void)
+{
+    return &this->addr;
+}
+
 std::string Peer::getAddrInStr(void)
 {
     return addrInStr;

@@ -9,7 +9,7 @@ private:
     Peer* masterPeer;
     std::vector<Peer> peerList;
     static MasterPeer* pInstance;
-    int totalPeers = 0;
+    int totalPeers;
     pthread_t listenerThread;
     pthread_mutex_t masterMutex;
     pthread_t receiveMsgThread[MAX_CONNECTIONS];
@@ -43,6 +43,7 @@ public:
     int connectToPeer(std::string addr, std::string portNum);
 
     /* Utils */
+    int getTotalPeer(void);
     int* getTotalPeerPtr(void);
 
     void listPeer(void);

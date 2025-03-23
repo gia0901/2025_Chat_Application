@@ -10,15 +10,15 @@
 #define APP_PRINT                   printf
 #define APP_INFO_PRINT(fmt,...)     do { \
                                         if (ENABLE_INFO_PRINT) { \
-                                            printf("[info][%s]: " fmt, __func__, ##__VA_ARGS__); \
-                                            printf("  [pid:%d][comm:%s]\n", getPID(), getComm()); \
+                                            printf("[info][%s][pid:%d proc:%s]: " fmt, __func__, getPID(), getComm(), ##__VA_ARGS__); \
+                                            printf("\n"); \
                                         } \
                                     } while(0)
 
 #define APP_DEBUG_PRINT(fmt,...)    do { \
                                         if (ENABLE_DEBUG_PRINT) { \
-                                            printf("[debug][%s]: " fmt, __func__, ##__VA_ARGS__); \
-                                            printf("  [pid:%d][comm:%s]\n", getPID(), getComm()); \
+                                            printf("[debug][%s][pid:%d proc:%s]: " fmt, __func__, getPID(), getComm(), ##__VA_ARGS__); \
+                                            printf("\n"); \
                                         } \
                                     } while(0)
 

@@ -32,11 +32,7 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-<<<<<<< HEAD
-    // 3. Init Listener thread for MasterPeer (listen for other peers wanting to connect)
-=======
     /* 3. Init Listener thread for MasterPeer (listen for other peers wanting to connect) */
->>>>>>> main
     ret = pthread_create(masterPeer->getListenerThreadID(), NULL, thd_listenForPeers, NULL);
     if (ret < 0)
     {
@@ -50,10 +46,14 @@ int main(int argc, char* argv[])
     while(1)
     {
 <<<<<<< HEAD
+<<<<<<< HEAD
         APP_INFO_PRINT("Enter the command: ");
 =======
         APP_PRINT("Enter the command: ");
 >>>>>>> main
+=======
+        APP_PRINT("\nEnter the command: ");
+>>>>>>> origin/main
 
         // Get user request 
         user_cmd = readInput();
@@ -82,16 +82,39 @@ int main(int argc, char* argv[])
             if (user_cmd.size() == 3)
                 masterPeer->connectToPeer(user_cmd[1], user_cmd[2]);
             else
-                APP_PRINT("wrong input. Please try again!");
+                APP_PRINT("\nWrong input. Please try again!\n");
         }
         else if(user_cmd[0] == "send")
         {
-            
+            if (user_cmd.size() == 3)
+                masterPeer->sendMessage(std::stoi(user_cmd[1]), user_cmd[2]);
+            else
+                APP_PRINT("\nWrong input. Please try again!\n");
+        }
+        else if (user_cmd[0] == "list")
+        {
+            masterPeer->listPeer();
+        }
+        
+    
+        else if (user_cmd[0] == "exit")
+        {
+            APP_PRINT("\nExiting app...\n");
+            // Handle necessary actions before exit...
+            return 0;
+        }
+        else
+        {
+            APP_PRINT("\nWrong command. Please try again!\n");
+            continue;
         }
     }
 
+<<<<<<< HEAD
 >>>>>>> main
     
 
+=======
+>>>>>>> origin/main
     return 0;
 }
