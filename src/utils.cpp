@@ -1,7 +1,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/prctl.h>
 #include "utils.hpp"
+
+char thread_name_buff[24];
 
 // Return Process ID (PID)
 int getPID(void)
@@ -43,9 +46,14 @@ const char* getComm(void)
     return proc_name;
 }
 
+// Return thread name
 const char* getThreadName(void)
 {
-    return "";
+    if (thread_name_buff[0] == 0)
+    {
+        prctl(PR_GET_NAME, thread_name_buff, 0L, 0L, 0L);
+    }
+    return (const char*)thread_name_buff;
 }
 
 std::vector<std::string> readInput(void)

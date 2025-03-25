@@ -60,7 +60,6 @@ int MasterPeer::initSocket(int portNum)
 
     IS_MASTER_PEER_CREATED();
     
-    
     mutexLock();
 
     /* 1. Init socket */ 
