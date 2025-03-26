@@ -118,7 +118,7 @@ int MasterPeer::updatePeerList(Peer peer)
     return ret;  
 }
 
-int MasterPeer::removePeer(Peer peer)
+int MasterPeer::removePeer(int id)
 {
     int ret = 0;
 
@@ -129,10 +129,37 @@ int MasterPeer::terminatePeer(unsigned int id)
 {
     int ret = 0;
 
+    /* Send terminate code to the peer through its ID */
+    ret = sendMessage(id, std::string(TERMINATE_CODE));
+
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("failed to terminate peer id[%d]", id);
+        return -1;
+    }
+
+    /* Remove it from the list */
+    ret = removePeer(id);
+
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("failed to remove peer id[%d] from the list.", id);
+    }
+
     return ret;  
 }
 
-Peer* MasterPeer::getChildPeer(int id)
+Peer MasterPeer::getChildPeer(int id)
+{
+    if (id < 0 || id > MAX_CONNECTIONS)
+    {
+        APP_DEBUG_PRINT("ID[%d] is not in range. NULL is returning...", id);
+        return Peer();
+    }
+    return peerList[id];
+}
+
+Peer* MasterPeer::getChildPeerPtr(int id)
 {
     if (id < 0 || id > MAX_CONNECTIONS)
     {
@@ -146,13 +173,13 @@ int MasterPeer::sendMessage(int id, std::string msg)
 {
     int ret = 0;
 
-    Peer* targetPeer = getChildPeer(id);
+    Peer* targetPeer = getChildPeerPtr(id);
 
     ret = send(targetPeer->getSockFD(), (void*)msg.c_str(), (size_t)msg.size(), 0);
 
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("Failed to send message to Peer ID[%d]", id);
+        APP_DEBUG_PRINT("failed to send message to Peer ID[%d]", id);
     }
     return ret;
 }
@@ -308,7 +335,7 @@ void* thd_listenForPeers(void* args)
         /* 2. New peer has been accepted. Update total peers */
         int *pTotalPeers = masterPeer->getTotalPeerPtr();
         int new_peer_id = *(pTotalPeers);
-        *(pTotalPeers)++; // update total peers
+        (*pTotalPeers)++; // update total peers
 
         /* 3. Convert port num from network-byte-order to integer for reading */
         int portNum = ntohs(new_peer.getAddr().sin_port);
@@ -347,7 +374,7 @@ void* thd_receiveMsgFromPeer(void* args)
 {
     int* p_PeerID = (int*)args;
 
-    Peer* targetPeer = MasterPeer::getInstance()->getChildPeer(*p_PeerID);
+    Peer* targetPeer = MasterPeer::getInstance()->getChildPeerPtr(*p_PeerID);
 
     char readBuff[MAX_MSG_SIZE] = {0};
 
@@ -365,6 +392,12 @@ void* thd_receiveMsgFromPeer(void* args)
         }
         else
         {
+            if (!strcmp(readBuff, TERMINATE_CODE))
+            {
+                /* Child peer wants to disconnect */
+
+            }
+            
             APP_PRINT("\n----------------------------------------------------\n");
             APP_PRINT("- From addr[%s] - port[%d]\n", targetPeer->getAddrInStr().c_str(), targetPeer->getPortNum());
             APP_PRINT("- Message: %s\n", readBuff);

@@ -26,21 +26,22 @@ public:
 
     int updatePeerList(Peer peer);
 
-    int removePeer(Peer peer);
+    /* Remove a peer from vector */
+    int removePeer(int id);
 
+    /* Terminate a peer with its id from the list */
     int terminatePeer(unsigned int id);
 
+    /* Get Master Socket file discriptor */
     int getMasterSockFd(void);
 
     /* Locking */
     int mutexLock(void);
-
     int mutexUnlock(void);
 
     /* Communicating */
     int sendMessage(int id, std::string msg);
-    std::string receiveMessage(int id);
-
+    
 
     /* Connection */
     int connectToPeer(std::string addr, std::string portNum);
@@ -55,7 +56,8 @@ public:
 
     pthread_t* getReceiveMsgThreadID(int id);
 
-    Peer* getChildPeer(int id);
+    Peer getChildPeer(int id);
+    Peer* getChildPeerPtr(int id);
 
 };
 

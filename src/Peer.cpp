@@ -3,7 +3,12 @@
 
 Peer::Peer()
 {
-    
+    sock_config = {0};
+    sockfd = -1;
+    id = -1;
+    portNum = -1;
+    addr = {0};
+    addrInStr = "";
 }
 
 int Peer::initSocket(void)

@@ -16,4 +16,6 @@
 
 #define IPV4_ADDR_LENGTH    16
 
+#define TERMINATE_CODE      "0x69"  // if a peer sends this value, means it wants to disconnect
+
 #endif // _DEFINES_HPP_
