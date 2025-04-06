@@ -1,7 +1,3 @@
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/prctl.h>
 #include "utils.hpp"
 
 char thread_name_buff[24];
@@ -96,6 +92,39 @@ std::vector<std::string> readInput(void)
     // }
 
     return input;
+}
+
+void usageError(const char* format, ...)
+{
+    va_list argList;
+
+    va_start(argList, format);
+
+    fprintf(stderr, "Usage: ");
+    vfprintf(stderr, format, argList);
+    fflush(stderr);     /* In case stderr is not line-buffered */
+    
+    va_end(argList);
+
+    exit(1);            /* Exit with error */
+}
+
+void errExit(const char* format, ...)
+{
+    va_list argList;
+
+    va_start(argList, format);
+
+    /* output error (with error number & error message) */
+    //outputError(); << implement this
+
+    va_end(argList);
+}
+
+static void terminateProc(int errNum)
+{
+    // not implement yet
+    exit(EXIT_FAILURE);
 }
 
 void clearScreen(void)

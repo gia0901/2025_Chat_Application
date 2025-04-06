@@ -43,7 +43,7 @@ int Peer::bindSocket(void)
 {
     int ret = 0;
     
-    ret = bind(sockfd, (struct sockaddr*)&addr, sizeof(addr));
+    ret = bind(sockfd, (SA*)&addr, sizeof(addr));
 
     return ret;
 }
@@ -61,7 +61,7 @@ int Peer::acceptSocket(int masterSockFd)
 {
     int new_sockfd = 0;
     
-    new_sockfd = accept(masterSockFd, (struct sockaddr*)&addr, &addrSize);
+    new_sockfd = accept(masterSockFd, (SA*)&addr, &addrSize);
 
     this->sockfd = new_sockfd;
 
@@ -79,24 +79,26 @@ void Peer::setID(int id)
 }
 
 
-void Peer::setAddr(struct sockaddr_in addr)
+void Peer::setAddr(SA_IN addr)
 {
     this->addr = addr;
 }
 
-struct sockaddr_in Peer::getAddr(void)
+SA_IN Peer::getAddr(void)
 {
     return this->addr;
+}
+
+SA_IN* Peer::getAddrPtr(void)
+{
+    return &this->addr;
 }
 
 int Peer::getAddrSize(void)
 {
     return sizeof(addr);
 }
-struct sockaddr_in* Peer::getAddrPtr(void)
-{
-    return &this->addr;
-}
+
 
 std::string Peer::getAddrInStr(void)
 {

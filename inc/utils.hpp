@@ -6,8 +6,10 @@
 // this should be declared in Makefile/Cmake
 #define ENABLE_INFO_PRINT   true
 #define ENABLE_DEBUG_PRINT  true
+#define ENABLE_DUMP_LOG     true    // not implement this mechanism yet.
 
-#define APP_PRINT                   printf
+#define APP_PRINT(fmt,...)          printf(fmt, ##__VA_ARGS__);
+
 #define APP_INFO_PRINT(fmt,...)     do { \
                                         if (ENABLE_INFO_PRINT) { \
                                             printf("[info][%s][pid:%d][@%s]: " fmt, __func__, getPID(), getThreadName(), ##__VA_ARGS__); \
@@ -22,6 +24,8 @@
                                         } \
                                     } while(0)
 
+#define UNUSED(X)   (void)(X)       /* To avoid gcc/g++ warnings */
+
 std::vector<std::string> readInput(void);
 
 void        clearScreen(void);
@@ -32,5 +36,10 @@ const char* getComm(void);
 
 const char* getThreadName(void);
 
+void        errExit(const char* format, ...);
+
+void        usageError(const char* format, ...);
+
+static void terminateProc(int errNum);
 
 #endif // _UTILS_HPP_

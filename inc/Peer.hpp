@@ -7,7 +7,7 @@
 
 #include "defines.hpp"
 
-// Socket file descriptor
+/* Socket file descriptor information */
 typedef struct SocketFD
 {
     int domain;  
@@ -26,7 +26,7 @@ private:
     
     int portNum;
 
-    struct sockaddr_in addr;    // sockaddr_in: internet address in ipv4
+    SA_IN addr;    /* sockaddr_in: internet socket for ipv4 address */
 
     socklen_t addrSize = sizeof(addr);
     
@@ -40,9 +40,9 @@ public:
     void setSockFD(int sockfd);
     
     void initAddr(void);
-    void setAddr(struct sockaddr_in addr);
-    struct sockaddr_in getAddr(void);
-    struct sockaddr_in* getAddrPtr(void);
+    void setAddr(SA_IN addr);
+    SA_IN  getAddr(void);
+    SA_IN* getAddrPtr(void);
     int getAddrSize(void);
 
     int bindSocket(void);
