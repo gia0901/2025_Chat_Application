@@ -15,6 +15,7 @@ typedef struct SocketFD
     int protocol;
 }sfd_t;
 
+/* Peer class */
 class Peer
 {
 private:
@@ -34,10 +35,12 @@ private:
 
 public:
     Peer();
+    ~Peer();
 
     int initSocket(void);
     int getSockFD(void);
     void setSockFD(int sockfd);
+    void closeSockFd(void);
     
     void initAddr(void);
     void setAddr(SA_IN addr);
@@ -57,6 +60,8 @@ public:
 
     int getPortNum(void);
     void setPortNum(int portNum);
+
+    
 };
 
 #endif // _PEER_HPP_

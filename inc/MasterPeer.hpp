@@ -3,16 +3,22 @@
 
 #include "Peer.hpp"
 
+typedef enum {
+    eINCREMENT = 0,
+    eDECREMENT = 1,
+    eRESET     = 2,
+} e_UpdatePeerCounter;
+
 class MasterPeer
 {
 private:
     Peer* masterPeer;
     std::vector<Peer> peerList;
     static MasterPeer* pInstance;
-    int totalPeers;
+    int peerCounter;
     pthread_t listenerThread;
     pthread_mutex_t masterMutex;
-    pthread_t receiveMsgThread[MAX_CONNECTIONS];
+    pthread_t peerHandlerThread[MAX_CONNECTIONS+1];
 
 public:
     MasterPeer();
@@ -22,7 +28,7 @@ public:
 
     static MasterPeer* getInstance(void);
 
-    int initSocket(int portNum);
+    int init(int portNum);
 
     int updatePeerList(Peer peer);
 
@@ -47,14 +53,15 @@ public:
     int connectToPeer(std::string addr, std::string portNum);
 
     /* Utils */
-    int getTotalPeer(void);
-    int* getTotalPeerPtr(void);
+    int getPeerCounter(void);
+    int* getPeerCounterPtr(void);
+    void updatePeerCounter(e_UpdatePeerCounter method);
 
     void listPeer(void);
 
     pthread_t* getListenerThreadID(void);
 
-    pthread_t* getReceiveMsgThreadID(int id);
+    pthread_t* getPeerHandlerThreadID(int id);
 
     Peer getChildPeer(int id);
     Peer* getChildPeerPtr(int id);
@@ -64,6 +71,6 @@ public:
 
 void* thd_listenForPeers(void* args);
 
-void* thd_receiveMsgFromPeer(void* args);
+void* thd_handlePeer(void* args);
 
 #endif // _MASTER_PEER_HPP_

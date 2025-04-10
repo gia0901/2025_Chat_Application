@@ -94,6 +94,22 @@ std::vector<std::string> readInput(void)
     return input;
 }
 
+void outputError(int errNum, const char* format, va_list ap)
+{
+    // char buf[LOG_BUF_SIZE], userMsg[LOG_BUF_SIZE];
+
+    // /* Fill user msg buffer */
+    // vsnprintf(userMsg, LOG_BUF_SIZE, format, ap);
+
+    // /* Fill final msg (buf) = error msg + user msg */
+    // snprintf(buf, LOG_BUF_SIZE, "ERROR[%s] %s\n", strerror(errNum), userMsg);
+
+    // /* Put it into stderr */
+    // fflush(stdout);     /*< Flush any pending stdout >*/
+    // fputs(buf, stderr);
+    // fflush(stderr);
+}
+
 void usageError(const char* format, ...)
 {
     va_list argList;
@@ -119,12 +135,6 @@ void errExit(const char* format, ...)
     //outputError(); << implement this
 
     va_end(argList);
-}
-
-static void terminateProc(int errNum)
-{
-    // not implement yet
-    exit(EXIT_FAILURE);
 }
 
 void clearScreen(void)

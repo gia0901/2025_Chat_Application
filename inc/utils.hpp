@@ -6,6 +6,7 @@
 // this should be declared in Makefile/Cmake
 #define ENABLE_INFO_PRINT   true
 #define ENABLE_DEBUG_PRINT  true
+#define ENABLE_ERROR_PRINT  true
 #define ENABLE_DUMP_LOG     true    // not implement this mechanism yet.
 
 #define APP_PRINT(fmt,...)          printf(fmt, ##__VA_ARGS__);
@@ -20,6 +21,14 @@
 #define APP_DEBUG_PRINT(fmt,...)    do { \
                                         if (ENABLE_DEBUG_PRINT) { \
                                             printf("[debug][%s][pid:%d[@%s]: " fmt, __func__, getPID(), getThreadName(), ##__VA_ARGS__); \
+                                            printf("\n"); \
+                                        } \
+                                    } while(0)
+
+
+#define APP_ERROR_PRINT(fmt,...)    do { \
+                                        if (ENABLE_ERROR_PRINT) { \
+                                            printf("[%s][pid:%d[@%s][ERROR: %s]: " fmt, __func__, getPID(), getThreadName(), strerror(errno), ##__VA_ARGS__); \
                                             printf("\n"); \
                                         } \
                                     } while(0)
@@ -40,6 +49,6 @@ void        errExit(const char* format, ...);
 
 void        usageError(const char* format, ...);
 
-static void terminateProc(int errNum);
+void        outputError(int errNum, const char* format, va_list ap);
 
 #endif // _UTILS_HPP_

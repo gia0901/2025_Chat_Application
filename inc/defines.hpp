@@ -19,13 +19,17 @@
 
 /* Definitions */
 #define MAX_CONNECTIONS     10
-#define MAX_BACKLOGS        MAX_CONNECTIONS     // waiting queue (when accepting new connections)
-#define MAX_MSG_SIZE        4096
+#define MAX_BACKLOGS        MAX_CONNECTIONS     /* waiting queue (when accepting new connections) */
+#define MAX_MSG_SIZE        256
 
 #define IPV4_ADDR_LENGTH    16
 
-#define PROCESS_COMM_DIR    "/proc/self/comm"   // Read this for Process Name (Comm)
-#define TERMINATE_CODE      "0x69"              // if a peer sends this code, means it wants to disconnect
+#define LOG_BUF_SIZE        500
+
+#define PROCESS_COMM_DIR    "/proc/self/comm"   /* Read this to get process name (Comm) */
+#define TERMINATE_CODE      "0x69"              /* if a peer sends this code, means it wants to disconnect */
+#define CHECK_CONNECT_CODE  "0x70"              /* send this code to a peer to check is it still connected or not */
+#define DUMP_LOG_DIR        "dump_log/"
 
 /* Typedef */
 typedef struct sockaddr     SA;

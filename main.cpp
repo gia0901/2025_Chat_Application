@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     masterPeer = MasterPeer::getInstance();
     
     /* 2. Init MasterPeer Socket */
-    ret = masterPeer->initSocket(port);
+    ret = masterPeer->init(port);
     if (ret == -1)
     {
         APP_DEBUG_PRINT("Failed to init Master Peer");

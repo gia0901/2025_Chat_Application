@@ -12,18 +12,20 @@
                                         } \
                                     } while(0)
 
+#define IS_PEER_LIST_FULL()         do { \
+                                    } while(0)
+
 MasterPeer::MasterPeer(void)
 {
-    // 1. Allocate Master Peer
+    /* 1. Allocate Master Peer */
     if (masterPeer == nullptr)
         masterPeer = new Peer();
     
-    // 2. Init Mutex
+    /* 2. Init Mutex */
     masterMutex = PTHREAD_MUTEX_INITIALIZER;
 
-    // 3. Init variables
-    totalPeers = 0;
-
+    /* 3. Init variables */
+    peerCounter = 0;
 }
 
 MasterPeer::~MasterPeer(void)
@@ -54,7 +56,10 @@ MasterPeer* MasterPeer::getInstance(void)
     return pInstance;
 }
 
-int MasterPeer::initSocket(int portNum)
+/**
+ * @brief: initialize MasterPeer socket
+ */
+int MasterPeer::init(int portNum)
 {
     int ret = 0;
 
@@ -68,7 +73,7 @@ int MasterPeer::initSocket(int portNum)
     
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("Create socket for MasterPeer failed.");
+        APP_ERROR_PRINT("Create socket for MasterPeer failed.");
         mutexUnlock();
         return -1;
     }
@@ -81,7 +86,7 @@ int MasterPeer::initSocket(int portNum)
 
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("Bind socket for MasterPeer failed.");
+        APP_ERROR_PRINT("Bind socket for MasterPeer failed.");
         mutexUnlock();
         return -1;
     }
@@ -91,7 +96,7 @@ int MasterPeer::initSocket(int portNum)
     
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("Listen on MasterPeer failed");
+        APP_ERROR_PRINT("Listen on MasterPeer failed");
         mutexUnlock();
         return -1;
     }
@@ -99,7 +104,6 @@ int MasterPeer::initSocket(int portNum)
     mutexUnlock();
 
     APP_INFO_PRINT("Init socket for MasterPeer successfully.");
-
     return ret;   
 }
 
@@ -108,19 +112,35 @@ int MasterPeer::updatePeerList(Peer peer)
     int ret = 0;
     
     mutexLock();
-
     peerList.push_back(peer);
-
     mutexUnlock();
 
     APP_INFO_PRINT("New peer id[%d] addr[%s] port[%d] has been added into the PeerList", peer.getID(), peer.getAddrInStr().c_str(), peer.getPortNum());
-
     return ret;  
 }
 
 int MasterPeer::removePeer(int id)
 {
     int ret = 0;
+
+    if (id < 0 || id > MAX_CONNECTIONS)
+    {
+        APP_ERROR_PRINT("ID[%d] is not in range.", id);
+        return -1;
+    }
+
+    mutexLock();
+
+    /* 1. Close connection (socket fd) of child peer */
+    Peer* childPeer = getChildPeerPtr(id);
+    childPeer->closeSockFd();
+
+    /* 2. Remove it from peer list */
+    std::vector<Peer>::iterator it = peerList.begin()+id;
+
+    peerList.erase(it);
+
+    mutexUnlock();
 
     return ret;  
 }
@@ -131,19 +151,20 @@ int MasterPeer::terminatePeer(unsigned int id)
 
     /* Send terminate code to the peer through its ID */
     ret = sendMessage(id, std::string(TERMINATE_CODE));
-
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("failed to terminate peer id[%d]", id);
+        APP_ERROR_PRINT("failed to send terminate code to peer id[%d]", id);
         return -1;
     }
+
+    /* Terminate the handler thread */
 
     /* Remove it from the list */
     ret = removePeer(id);
 
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("failed to remove peer id[%d] from the list.", id);
+        APP_ERROR_PRINT("failed to remove peer id[%d] from the list.", id);
     }
 
     return ret;  
@@ -153,34 +174,46 @@ Peer MasterPeer::getChildPeer(int id)
 {
     if (id < 0 || id > MAX_CONNECTIONS)
     {
-        APP_DEBUG_PRINT("ID[%d] is not in range. NULL is returning...", id);
+        APP_ERROR_PRINT("ID[%d] is not in range. NULL is returning...", id);
         return Peer();
     }
     return peerList[id];
 }
 
+/**
+ * @brief: get the peer instance through its ID
+ */
 Peer* MasterPeer::getChildPeerPtr(int id)
 {
     if (id < 0 || id > MAX_CONNECTIONS)
     {
-        APP_DEBUG_PRINT("ID[%d] is not in range. NULL is returning...", id);
+        APP_ERROR_PRINT("ID[%d] is not in range. NULL is returning...", id);
         return nullptr;
     }
     return &peerList[id];
 }
 
+/**
+ * @brief: send a message to a peer on the list
+ */
 int MasterPeer::sendMessage(int id, std::string msg)
 {
     int ret = 0;
 
+    APP_INFO_PRINT("id[%d] msg:%s", id, msg.c_str());
+
     Peer* targetPeer = getChildPeerPtr(id);
+
+    // debug
+    APP_INFO_PRINT("Peer info: fd[%d] port[%d] id[%d] addr[%s]", targetPeer->getSockFD(), targetPeer->getPortNum(), targetPeer->getID(), targetPeer->getAddrInStr().c_str());
 
     ret = send(targetPeer->getSockFD(), (void*)msg.c_str(), (size_t)msg.size(), 0);
 
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("failed to send message to Peer ID[%d]", id);
+        APP_ERROR_PRINT("failed to send message to Peer ID[%d] ret[%d]", id, ret);
     }
+
     return ret;
 }
 
@@ -225,14 +258,16 @@ pthread_t* MasterPeer::getListenerThreadID(void)
 
 int MasterPeer::connectToPeer(std::string addr, std::string portNum)
 {
-    if (totalPeers > MAX_CONNECTIONS)
+    if (peerCounter > MAX_CONNECTIONS)
     {
         APP_PRINT("\nPeerList is already full. Exiting now...\n");
         return 0;
     }
     
+    int fd = -1;
     int ret = 0;
     int port_num = std::stoi(portNum);
+    static int targetID;
 
     IS_MASTER_PEER_CREATED();
 
@@ -241,10 +276,10 @@ int MasterPeer::connectToPeer(std::string addr, std::string portNum)
     target_peer->setPortNum(port_num);
 
     /* 1. Initialize the socket */
-    ret = target_peer->initSocket();
-    if (ret < 0)
+    fd = target_peer->initSocket();
+    if (fd < 0)
     {
-        APP_DEBUG_PRINT("Failed to initialize socket for peer at addr[%s] port[%d]", addr.c_str(), port_num);
+        APP_ERROR_PRINT("Failed to initialize socket for peer at addr[%s] port[%d]", addr.c_str(), port_num);
         return -1;
     }
 
@@ -254,57 +289,80 @@ int MasterPeer::connectToPeer(std::string addr, std::string portNum)
 
     if (inet_pton(AF_INET, addr.c_str(), &target_peer->getAddrPtr()->sin_addr) < 0)
     {
-        APP_DEBUG_PRINT("Invalid address/ Address not supported: %s", addr.c_str());
+        APP_ERROR_PRINT("Invalid address/ Address not supported: %s", addr.c_str());
         return -1;
     }
 
     APP_INFO_PRINT("Attempting to connect to peer at addr[%s] port[%d]", addr.c_str(), port_num);
 
     /* 3. Attempt to connect to the peer */
-    ret = connect(target_peer->getSockFD(), (struct sockaddr*)target_peer->getAddrPtr(), target_peer->getAddrSize());
+    ret = connect(target_peer->getSockFD(), (SA*)target_peer->getAddrPtr(), target_peer->getAddrSize());
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("Failed to connect to peer at addr[%s] port[%d], error: %s", addr.c_str(), port_num, strerror(errno));
+        APP_ERROR_PRINT("Failed to connect to peer at addr[%s] port[%d], error: %s", addr.c_str(), port_num, strerror(errno));
         return -1;
     }
 
     /* 4. Update new peer into the list */
-    int *pTotalPeers = MasterPeer::getTotalPeerPtr();
-    int targetID = *pTotalPeers;
+    targetID = peerCounter;
     target_peer->setID(targetID);
 
-    updatePeerList(*target_peer);
-    (*pTotalPeers)++; // Update total peers
+    APP_INFO_PRINT("New peer info: id[%d] port[%d] sockfd[%d] addr[%s]", target_peer->getID(), target_peer->getPortNum(), target_peer->getSockFD(), target_peer->getAddrInStr().c_str());
 
+    updatePeerList(*target_peer);
+    
     /* 5. Create a thread to receive message from it. */
-    ret = pthread_create(getReceiveMsgThreadID(targetID), NULL, thd_receiveMsgFromPeer, &targetID);
+    ret = pthread_create(getPeerHandlerThreadID(targetID), NULL, thd_handlePeer, &targetID);
     if (ret < 0)
     {
-        APP_DEBUG_PRINT("failed to create thread for receiving msg for peer id[%d]", targetID);
+        APP_ERROR_PRINT("failed to create thread for receiving msg for peer id[%d]", targetID);
         return -1;
     }
+
+    updatePeerCounter(eINCREMENT); // Update total peers
 
     return ret;
 }
 
-pthread_t* MasterPeer::getReceiveMsgThreadID(int id)
+pthread_t* MasterPeer::getPeerHandlerThreadID(int id)
 {
     if (id < 0 || id > MAX_CONNECTIONS)
     {
-        APP_DEBUG_PRINT("ID[%d] is not in range. NULL is returning...", id);
+        APP_ERROR_PRINT("ID[%d] is not in range. NULL is returning...", id);
         return nullptr;
     }
-    return &receiveMsgThread[id];
+    return &peerHandlerThread[id];
 }
 
-int MasterPeer::getTotalPeer(void)
+int MasterPeer::getPeerCounter(void)
 {
-    return totalPeers;
+    return peerCounter;
 }
 
-int* MasterPeer::getTotalPeerPtr(void)
+int* MasterPeer::getPeerCounterPtr(void)
 {
-    return &totalPeers;
+    return &peerCounter;
+}
+
+void MasterPeer::updatePeerCounter(e_UpdatePeerCounter method)
+{
+    mutexLock();
+    if (method == eINCREMENT)
+    {
+        peerCounter++;
+    }
+    else if (method == eDECREMENT)
+    {
+        if (peerCounter > 0)
+            peerCounter--;
+        else
+            peerCounter = 0;
+    }
+    else
+    {
+        peerCounter = 0;
+    }
+    mutexUnlock();
 }
 
 void* thd_listenForPeers(void* args)
@@ -317,7 +375,7 @@ void* thd_listenForPeers(void* args)
     while (1)
     {
         /* 0. If peer list is full, hanging and printing out every 10 seconds */
-        if (masterPeer->getTotalPeer() > MAX_CONNECTIONS)
+        if (masterPeer->getPeerCounter() > MAX_CONNECTIONS)
         {
             APP_PRINT("\nPeerList is already full...\n");
             sleep(10);
@@ -328,15 +386,14 @@ void* thd_listenForPeers(void* args)
         int new_sockfd = new_peer.acceptSocket(masterPeer->getMasterSockFd());
         if (new_sockfd < 0)
         {
-            APP_DEBUG_PRINT("accept new peer socket failed. Continue to listen for a new socket...");
+            APP_ERROR_PRINT("accept new peer socket failed. Continue to listen for a new socket...");
             continue;
         }
 
         /* 2. New peer has been accepted. Update total peers */
-        int *pTotalPeers = masterPeer->getTotalPeerPtr();
-        int new_peer_id = *(pTotalPeers);
-        (*pTotalPeers)++; // update total peers
-
+        int newPeerID = masterPeer->getPeerCounter();
+        masterPeer->updatePeerCounter(eINCREMENT);
+        
         /* 3. Convert port num from network-byte-order to integer for reading */
         int portNum = ntohs(new_peer.getAddr().sin_port);
 
@@ -345,38 +402,42 @@ void* thd_listenForPeers(void* args)
         inet_ntop(AF_INET, &new_peer.getAddrPtr()->sin_addr, addrInStr, IPV4_ADDR_LENGTH);
 
         /* 5. Prepare the new peer and add it into the list */
-        new_peer.setID(new_peer_id);
+        new_peer.setID(newPeerID);
         new_peer.setAddrInStr(std::string(addrInStr));
         new_peer.setPortNum(portNum);
 
         masterPeer->updatePeerList(new_peer);
 
         /* 6. Now new peer is a part of the list. Create a thread to receive message from it. */
-        pthread_t *threadID = masterPeer->getReceiveMsgThreadID(new_peer_id);
+        pthread_t* threadID = masterPeer->getPeerHandlerThreadID(newPeerID);
         if (threadID == nullptr)
         {
-            APP_DEBUG_PRINT("Cannot get Thread handler with Peer ID[%d]!!!", new_peer_id);
+            APP_ERROR_PRINT("Cannot get Thread handler with Peer ID[%d]!!!", newPeerID);
             break;
         }
         
-        int ret = pthread_create(threadID, NULL, thd_receiveMsgFromPeer, &new_peer_id);
+        int ret = pthread_create(threadID, NULL, thd_handlePeer, &newPeerID);
         if (ret < 0)
         {
-            APP_DEBUG_PRINT("failed to create thd_receiveMsgFromPeer for id[%d]", new_peer_id);
+            APP_ERROR_PRINT("failed to create thd_handlePeer for id[%d]", newPeerID);
         }
     }
 
-    APP_DEBUG_PRINT("Master Listener thread failed!!!");
+    APP_ERROR_PRINT("Master Listener thread failed!!!");
     return nullptr;
 }
 
-void* thd_receiveMsgFromPeer(void* args)
+void* thd_handlePeer(void* args)
 {
-    int* p_PeerID = (int*)args;
+    int peerID = *((int*)args);
 
-    Peer* targetPeer = MasterPeer::getInstance()->getChildPeerPtr(*p_PeerID);
+    MasterPeer* masterPeer = MasterPeer::getInstance();
+
+    Peer* targetPeer = masterPeer->getChildPeerPtr(peerID);
 
     char readBuff[MAX_MSG_SIZE] = {0};
+
+    APP_INFO_PRINT("Peer info: id[%d] port[%d] sockfd[%d] addr[%s]", targetPeer->getID(), targetPeer->getPortNum(), targetPeer->getSockFD(), targetPeer->getAddrInStr().c_str());
 
     while (1)
     {
@@ -385,17 +446,46 @@ void* thd_receiveMsgFromPeer(void* args)
         if (readBytes < 0)  // Error
         {
             // add code here!!!
+            APP_ERROR_PRINT("Error detected!");
         }
         else if (readBytes == 0) // ???
         {
-            // add code here!!!
+            // EOF detected:
+            // 1. Everything has been read.
+            // 2. A peer has disconnected without informing
+            APP_ERROR_PRINT("EOF detected! Re-checking connection with peer ID[%d]", peerID);
+            
+            int cnt = 0;
+            do {
+                if (send(targetPeer->getSockFD(), CHECK_CONNECT_CODE, (size_t)sizeof(CHECK_CONNECT_CODE), 0) == -1) {
+                    cnt++;
+                }
+                else {
+                    break;
+                }
+            } while (cnt < 5);
+            
+            if (cnt == 5) {
+                APP_ERROR_PRINT("peer ID[%d] can't be connected, remove peer & destroy thread!!!", peerID);
+                masterPeer->removePeer(peerID);
+                break;
+            }
+            else {
+                APP_DEBUG_PRINT("peer ID[%d] is still working! Thread is resuming...", peerID);
+                continue;
+            }
         }
         else
         {
             if (!strcmp(readBuff, TERMINATE_CODE))
             {
-                /* Child peer wants to disconnect */
-
+                /* Child peer wants to disconnect. It will do the cleaning in its side. Here we should clear our side only */
+                masterPeer->removePeer(peerID);
+            }
+            else if (!strcmp(readBuff, CHECK_CONNECT_CODE))
+            {
+                /* Target peer wants to check current connection */
+                // what should we do here?
             }
             
             APP_PRINT("\n----------------------------------------------------\n");
@@ -406,7 +496,7 @@ void* thd_receiveMsgFromPeer(void* args)
         memset(readBuff, 0, MAX_MSG_SIZE);
     }
 
-    APP_DEBUG_PRINT("Thread received msg for ID[%d] failed", *p_PeerID);
+    APP_DEBUG_PRINT("Thread received msg for ID[%d] failed", peerID);
 
     return nullptr;
 }
