@@ -19,7 +19,7 @@
 
 /* Definitions */
 #define MAX_CONNECTIONS     10
-#define MAX_BACKLOGS        MAX_CONNECTIONS     /* waiting queue (when accepting new connections) */
+#define MAX_BACKLOGS        MAX_CONNECTIONS     /* Waiting queue (when accepting new connections) */
 #define MAX_MSG_SIZE        256
 
 #define IPV4_ADDR_LENGTH    16

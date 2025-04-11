@@ -15,6 +15,13 @@
 #define IS_PEER_LIST_FULL()         do { \
                                     } while(0)
 
+#define CHECK_MSG_LENGTH(msg)       do { \
+                                        if ((msg).length()+1 > MAX_MSG_SIZE) {\
+                                            APP_PRINT("Message size exceeds %d bytes. Aborting!!!\n", MAX_MSG_SIZE); \
+                                            return -1; \
+                                        } \
+                                    } while(0)
+
 MasterPeer::MasterPeer(void)
 {
     /* 1. Allocate Master Peer */
@@ -30,7 +37,7 @@ MasterPeer::MasterPeer(void)
 
 MasterPeer::~MasterPeer(void)
 {
-    /* 1. Release Singleton instance */
+    /* 1. Release Singleton */
     if (pInstance != nullptr)
     {
         delete pInstance;
@@ -45,7 +52,7 @@ MasterPeer::~MasterPeer(void)
     }
 }
 
-// Singleton
+/* Singleton */
 MasterPeer* MasterPeer::pInstance = nullptr;
 
 MasterPeer* MasterPeer::getInstance(void)
@@ -68,9 +75,9 @@ int MasterPeer::init(int portNum)
     mutexLock();
 
     /* 1. Init socket */ 
-    masterPeer->setPortNum(portNum); // Set port number
-    ret = masterPeer->initSocket();  // Internet socket - Stream          
-    
+    masterPeer->setPortNum(portNum); /* Set port number */
+
+    ret = masterPeer->initSocket();  /* Initialize socket for master peer */      
     if (ret < 0)
     {
         APP_ERROR_PRINT("Create socket for MasterPeer failed.");
@@ -78,12 +85,11 @@ int MasterPeer::init(int portNum)
         return -1;
     }
     
-    /*2. Init address structure */ 
+    /* 2. Init address structure */ 
     masterPeer->initAddr(); // Socket will be binded to this, so that other apps can find and connect to the socket
 
     /* 3. Bind socket to the address */ 
     ret = masterPeer->bindSocket();
-
     if (ret < 0)
     {
         APP_ERROR_PRINT("Bind socket for MasterPeer failed.");
@@ -93,7 +99,6 @@ int MasterPeer::init(int portNum)
 
     /* 4. Start to listening for other sockets */ 
     ret = masterPeer->listenSocket();
-    
     if (ret < 0)
     {
         APP_ERROR_PRINT("Listen on MasterPeer failed");
@@ -103,7 +108,7 @@ int MasterPeer::init(int portNum)
 
     mutexUnlock();
 
-    APP_INFO_PRINT("Init socket for MasterPeer successfully.");
+    APP_INFO_PRINT("Initialize MasterPeer successfully.");
     return ret;   
 }
 
@@ -125,7 +130,7 @@ int MasterPeer::removePeer(int id)
 
     if (id < 0 || id > MAX_CONNECTIONS)
     {
-        APP_ERROR_PRINT("ID[%d] is not in range.", id);
+        APP_ERROR_PRINT("ID[%d] is not in range!!!", id);
         return -1;
     }
 
@@ -161,7 +166,6 @@ int MasterPeer::terminatePeer(unsigned int id)
 
     /* Remove it from the list */
     ret = removePeer(id);
-
     if (ret < 0)
     {
         APP_ERROR_PRINT("failed to remove peer id[%d] from the list.", id);
@@ -170,6 +174,9 @@ int MasterPeer::terminatePeer(unsigned int id)
     return ret;  
 }
 
+/**
+ * @brief: get a copy of a child peer through its ID
+ */
 Peer MasterPeer::getChildPeer(int id)
 {
     if (id < 0 || id > MAX_CONNECTIONS)
@@ -200,15 +207,15 @@ int MasterPeer::sendMessage(int id, std::string msg)
 {
     int ret = 0;
 
+    CHECK_MSG_LENGTH(msg);
+
     APP_INFO_PRINT("id[%d] msg:%s", id, msg.c_str());
 
     Peer* targetPeer = getChildPeerPtr(id);
 
-    // debug
     APP_INFO_PRINT("Peer info: fd[%d] port[%d] id[%d] addr[%s]", targetPeer->getSockFD(), targetPeer->getPortNum(), targetPeer->getID(), targetPeer->getAddrInStr().c_str());
 
     ret = send(targetPeer->getSockFD(), (void*)msg.c_str(), (size_t)msg.size(), 0);
-
     if (ret < 0)
     {
         APP_ERROR_PRINT("failed to send message to Peer ID[%d] ret[%d]", id, ret);
@@ -236,11 +243,17 @@ void MasterPeer::listPeer(void)
     APP_PRINT("--------------------------------------------\n");
 }
 
+/**
+ * @brief: Lock mutex
+ */
 int MasterPeer::mutexLock(void)
 {
     return pthread_mutex_lock(&masterMutex);
 }
 
+/**
+ * @brief: Release mutex
+ */
 int MasterPeer::mutexUnlock(void)
 {
     return pthread_mutex_unlock(&masterMutex);
@@ -271,23 +284,24 @@ int MasterPeer::connectToPeer(std::string addr, std::string portNum)
 
     IS_MASTER_PEER_CREATED();
 
-    Peer *target_peer = new Peer();
-    target_peer->setAddrInStr(addr);
-    target_peer->setPortNum(port_num);
+    Peer *targetPeer = new Peer();
+    targetPeer->setAddrInStr(addr);
+    targetPeer->setPortNum(port_num);
 
     /* 1. Initialize the socket */
-    fd = target_peer->initSocket();
+    fd = targetPeer->initSocket();
     if (fd < 0)
     {
         APP_ERROR_PRINT("Failed to initialize socket for peer at addr[%s] port[%d]", addr.c_str(), port_num);
         return -1;
     }
 
-    /* 2. Set up the address structure for target peer */
-    target_peer->getAddrPtr()->sin_family = AF_INET;
-    target_peer->getAddrPtr()->sin_port = htons(port_num);
-
-    if (inet_pton(AF_INET, addr.c_str(), &target_peer->getAddrPtr()->sin_addr) < 0)
+    /* 2. Set up the address structure for target peer
+          This is a manual approach, should refactor this...
+    */
+    targetPeer->getAddrPtr()->sin_family = AF_INET;
+    targetPeer->getAddrPtr()->sin_port = htons(port_num);
+    if (inet_pton(AF_INET, addr.c_str(), &targetPeer->getAddrPtr()->sin_addr) < 0)
     {
         APP_ERROR_PRINT("Invalid address/ Address not supported: %s", addr.c_str());
         return -1;
@@ -296,20 +310,20 @@ int MasterPeer::connectToPeer(std::string addr, std::string portNum)
     APP_INFO_PRINT("Attempting to connect to peer at addr[%s] port[%d]", addr.c_str(), port_num);
 
     /* 3. Attempt to connect to the peer */
-    ret = connect(target_peer->getSockFD(), (SA*)target_peer->getAddrPtr(), target_peer->getAddrSize());
+    ret = connect(targetPeer->getSockFD(), (SA*)targetPeer->getAddrPtr(), targetPeer->getAddrSize());
     if (ret < 0)
     {
-        APP_ERROR_PRINT("Failed to connect to peer at addr[%s] port[%d], error: %s", addr.c_str(), port_num, strerror(errno));
+        APP_ERROR_PRINT("Failed to connect to peer at addr[%s] port[%d]", addr.c_str(), port_num);
         return -1;
     }
 
     /* 4. Update new peer into the list */
     targetID = peerCounter;
-    target_peer->setID(targetID);
+    targetPeer->setID(targetID);
 
-    APP_INFO_PRINT("New peer info: id[%d] port[%d] sockfd[%d] addr[%s]", target_peer->getID(), target_peer->getPortNum(), target_peer->getSockFD(), target_peer->getAddrInStr().c_str());
+    APP_INFO_PRINT("New peer info: id[%d] port[%d] sockfd[%d] addr[%s]", targetPeer->getID(), targetPeer->getPortNum(), targetPeer->getSockFD(), targetPeer->getAddrInStr().c_str());
 
-    updatePeerList(*target_peer);
+    updatePeerList(*targetPeer);
     
     /* 5. Create a thread to receive message from it. */
     ret = pthread_create(getPeerHandlerThreadID(targetID), NULL, thd_handlePeer, &targetID);
@@ -358,19 +372,25 @@ void MasterPeer::updatePeerCounter(e_UpdatePeerCounter method)
         else
             peerCounter = 0;
     }
-    else
+    else if (method == eRESET)
     {
         peerCounter = 0;
+    }
+    else
+    {
+        APP_DEBUG_PRINT("Invalid update method: %d", method);
     }
     mutexUnlock();
 }
 
 void* thd_listenForPeers(void* args)
 {
-    Peer new_peer = Peer();
+    Peer newPeer = Peer();
     MasterPeer *masterPeer = MasterPeer::getInstance();
 
-    APP_INFO_PRINT("\nListener Thread is created, waiting for Peers to connect");
+    static int newPeerID;   /* ID should be available even when the loop ends, so that the thread can fetch its value */
+
+    APP_INFO_PRINT("\nListener Thread is created, waiting for peers to connect");
 
     while (1)
     {
@@ -383,7 +403,7 @@ void* thd_listenForPeers(void* args)
         }
 
         /* 1. Wait & accept a new socket */
-        int new_sockfd = new_peer.acceptSocket(masterPeer->getMasterSockFd());
+        int new_sockfd = newPeer.acceptSocket(masterPeer->getMasterSockFd());
         if (new_sockfd < 0)
         {
             APP_ERROR_PRINT("accept new peer socket failed. Continue to listen for a new socket...");
@@ -391,22 +411,22 @@ void* thd_listenForPeers(void* args)
         }
 
         /* 2. New peer has been accepted. Update total peers */
-        int newPeerID = masterPeer->getPeerCounter();
+        newPeerID = masterPeer->getPeerCounter();
         masterPeer->updatePeerCounter(eINCREMENT);
         
         /* 3. Convert port num from network-byte-order to integer for reading */
-        int portNum = ntohs(new_peer.getAddr().sin_port);
+        int portNum = ntohs(newPeer.getAddr().sin_port);
 
         /* 4. Convert ipv4 into string for reading */
         char addrInStr[IPV4_ADDR_LENGTH];
-        inet_ntop(AF_INET, &new_peer.getAddrPtr()->sin_addr, addrInStr, IPV4_ADDR_LENGTH);
+        inet_ntop(AF_INET, &newPeer.getAddrPtr()->sin_addr, addrInStr, IPV4_ADDR_LENGTH);
 
         /* 5. Prepare the new peer and add it into the list */
-        new_peer.setID(newPeerID);
-        new_peer.setAddrInStr(std::string(addrInStr));
-        new_peer.setPortNum(portNum);
+        newPeer.setID(newPeerID);
+        newPeer.setAddrInStr(std::string(addrInStr));
+        newPeer.setPortNum(portNum);
 
-        masterPeer->updatePeerList(new_peer);
+        masterPeer->updatePeerList(newPeer);
 
         /* 6. Now new peer is a part of the list. Create a thread to receive message from it. */
         pthread_t* threadID = masterPeer->getPeerHandlerThreadID(newPeerID);
@@ -423,7 +443,7 @@ void* thd_listenForPeers(void* args)
         }
     }
 
-    APP_ERROR_PRINT("Master Listener thread failed!!!");
+    APP_ERROR_PRINT("Master Listener thread has broken!!!");
     return nullptr;
 }
 
