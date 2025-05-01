@@ -2,26 +2,32 @@
 #include "MasterPeer.hpp"
 #include "utils.hpp"
 
-
-#define IS_MASTER_PEER_CREATED()    do { \
-                                        if (masterPeer == nullptr) { \
-                                            masterPeer = new Peer(); \
-                                        } \
-                                        else { \
-                                            APP_INFO_PRINT("masterPeer is already created."); \
-                                        } \
+/**
+ * @brief   Private macros
+ */
+#define IS_MASTER_PEER_CREATED()    do {                                                        \
+                                        if (masterPeer == nullptr) {                            \
+                                            masterPeer = new Peer();                            \
+                                        }                                                       \
+                                        else {                                                  \
+                                            APP_INFO_PRINT("masterPeer is already created.");   \
+                                        }                                                       \
                                     } while(0)
 
-#define IS_PEER_LIST_FULL()         do { \
-                                    } while(0)
+#define IS_PEER_VALID(id)           do { } while(0)
 
-#define CHECK_MSG_LENGTH(msg)       do { \
-                                        if ((msg).length()+1 > MAX_MSG_SIZE) {\
-                                            APP_PRINT("Message size exceeds %d bytes. Aborting!!!\n", MAX_MSG_SIZE); \
-                                            return -1; \
-                                        } \
+#define CHECK_MSG_LENGTH(msg)       do {                                                                                \
+                                        if ((msg).length()+1 > MAX_MSG_SIZE) {                                          \
+                                            APP_PRINT("Message size exceeds %d bytes. Aborting!!!\n", MAX_MSG_SIZE);    \
+                                            return -1;                                                                  \
+                                        }                                                                               \
                                     } while(0)
-
+/**
+ * @brief   Master Peer Constructor
+ * @note    - Initialize Master Peer object
+ *          - Initialize Mutex Lock
+ * @retval  None
+ */
 MasterPeer::MasterPeer(void)
 {
     /* 1. Allocate Master Peer */
@@ -34,6 +40,7 @@ MasterPeer::MasterPeer(void)
     /* 3. Init variables */
     peerCounter = 0;
 }
+
 
 MasterPeer::~MasterPeer(void)
 {
@@ -52,7 +59,9 @@ MasterPeer::~MasterPeer(void)
     }
 }
 
-/* Singleton */
+/**
+ * @brief   Singleton initialization 
+ */
 MasterPeer* MasterPeer::pInstance = nullptr;
 
 MasterPeer* MasterPeer::getInstance(void)
@@ -64,7 +73,10 @@ MasterPeer* MasterPeer::getInstance(void)
 }
 
 /**
- * @brief: initialize MasterPeer socket
+ * @brief   MasterPeer socket initialization
+ * @note    Initialize necessary settings to make MasterPeer ready to work
+ * @param   portNum - port number of this process, where MasterPeer will listen on
+ * @retval  0:PASS / -1: FAILED
  */
 int MasterPeer::init(int portNum)
 {
@@ -77,7 +89,7 @@ int MasterPeer::init(int portNum)
     /* 1. Init socket */ 
     masterPeer->setPortNum(portNum); /* Set port number */
 
-    ret = masterPeer->initSocket();  /* Initialize socket for master peer */      
+    ret = masterPeer->initSocket();  /* Initialize socket */      
     if (ret < 0)
     {
         APP_ERROR_PRINT("Create socket for MasterPeer failed.");
@@ -86,7 +98,13 @@ int MasterPeer::init(int portNum)
     }
     
     /* 2. Init address structure */ 
-    masterPeer->initAddr(); // Socket will be binded to this, so that other apps can find and connect to the socket
+    ret = masterPeer->initAddr(ADDR_TYPE_MASTER);
+    if (ret < 0)
+    {
+        APP_DEBUG_PRINT("Failed to initialize address for MasterPeer.");
+        mutexUnlock();
+        return -1;
+    }
 
     /* 3. Bind socket to the address */ 
     ret = masterPeer->bindSocket();
@@ -97,7 +115,7 @@ int MasterPeer::init(int portNum)
         return -1;
     }
 
-    /* 4. Start to listening for other sockets */ 
+    /* 4. Start to listening on Master Socket for other sockets */ 
     ret = masterPeer->listenSocket();
     if (ret < 0)
     {
@@ -112,6 +130,11 @@ int MasterPeer::init(int portNum)
     return ret;   
 }
 
+/**
+ * @brief   Update current PeerList
+ * @param   peer - New peer to be added
+ * @retval  0: SUCCESS/ -1: FAILED
+ */
 int MasterPeer::updatePeerList(Peer peer)
 {
     int ret = 0;
@@ -124,6 +147,11 @@ int MasterPeer::updatePeerList(Peer peer)
     return ret;  
 }
 
+/**
+ * @brief   Remove a peer from the list
+ * @param   id - id of the peer
+ * @retval  0: SUCCESS / -1: FAILED
+ */
 int MasterPeer::removePeer(int id)
 {
     int ret = 0;
@@ -150,6 +178,18 @@ int MasterPeer::removePeer(int id)
     return ret;  
 }
 
+/**
+ * @brief   Terminate a peer on the list
+ * 
+ * @note    There're some tasks must be done when terminating a peer:
+ *              - Send a message to inform about the termination
+ *              - Close child peer's socket
+ *              - Kill its handler thread
+ *              - Remove it from the list
+ * 
+ * @param   id - identity of the child peer
+ * @retval  0:Pass / -1:Failed
+ */
 int MasterPeer::terminatePeer(unsigned int id)
 {
     int ret = 0;
@@ -162,7 +202,11 @@ int MasterPeer::terminatePeer(unsigned int id)
         return -1;
     }
 
+    /* Close child peer's socket. After closing, child peer recv() will return '0' */
+    getChildPeerPtr(id)->closeSockFd();
+
     /* Terminate the handler thread */
+
 
     /* Remove it from the list */
     ret = removePeer(id);
@@ -175,7 +219,9 @@ int MasterPeer::terminatePeer(unsigned int id)
 }
 
 /**
- * @brief: get a copy of a child peer through its ID
+ * @brief   Get a copy of a child peer through its ID
+ * @param   id - identity of the child peer
+ * @retval  Peer object
  */
 Peer MasterPeer::getChildPeer(int id)
 {
@@ -188,7 +234,9 @@ Peer MasterPeer::getChildPeer(int id)
 }
 
 /**
- * @brief: get the peer instance through its ID
+ * @brief   Get the peer instance through its ID
+ * @param   id - identity of the child peer
+ * @retval  Peer* - pointer to the child peer
  */
 Peer* MasterPeer::getChildPeerPtr(int id)
 {
@@ -201,7 +249,10 @@ Peer* MasterPeer::getChildPeerPtr(int id)
 }
 
 /**
- * @brief: send a message to a peer on the list
+ * @brief   Send a message to a peer on the list
+ * @param   id - identity of the target peer
+ * @param   msg - message to be sent
+ * @retval  0: SUCCESS / -1: FAILED
  */
 int MasterPeer::sendMessage(int id, std::string msg)
 {
@@ -224,6 +275,11 @@ int MasterPeer::sendMessage(int id, std::string msg)
     return ret;
 }
 
+/**
+ * @brief   List all the peers on the PeerList
+ * @param   None
+ * @retval  None
+ */
 void MasterPeer::listPeer(void)
 {
     APP_PRINT("\n----------------- Peer List ----------------\n");
@@ -244,7 +300,7 @@ void MasterPeer::listPeer(void)
 }
 
 /**
- * @brief: Lock mutex
+ * @brief   Lock mutex
  */
 int MasterPeer::mutexLock(void)
 {
@@ -252,7 +308,7 @@ int MasterPeer::mutexLock(void)
 }
 
 /**
- * @brief: Release mutex
+ * @brief   Release mutex
  */
 int MasterPeer::mutexUnlock(void)
 {
@@ -299,14 +355,20 @@ int MasterPeer::connectToPeer(std::string addr, std::string portNum)
     /* 2. Set up the address structure for target peer
           This is a manual approach, should refactor this...
     */
-    targetPeer->getAddrPtr()->sin_family = AF_INET;
-    targetPeer->getAddrPtr()->sin_port = htons(port_num);
-    if (inet_pton(AF_INET, addr.c_str(), &targetPeer->getAddrPtr()->sin_addr) < 0)
+    // targetPeer->getAddrPtr()->sin_family = AF_INET;
+    // targetPeer->getAddrPtr()->sin_port = htons(port_num);
+    // if (inet_pton(AF_INET, addr.c_str(), &targetPeer->getAddrPtr()->sin_addr) < 0)
+    // {
+    //     APP_ERROR_PRINT("Invalid address/Address is not supported: %s", addr.c_str());
+    //     return -1;
+    // }
+    ret = targetPeer->initAddr(ADDR_TYPE_CLIENT);
+    if (ret < 0)
     {
-        APP_ERROR_PRINT("Invalid address/ Address not supported: %s", addr.c_str());
-        return -1;
+        APP_DEBUG_PRINT("Failed to initialize address for peer[addr:%s][port:%d]", addr.c_str(), port_num);
     }
 
+    
     APP_INFO_PRINT("Attempting to connect to peer at addr[%s] port[%d]", addr.c_str(), port_num);
 
     /* 3. Attempt to connect to the peer */
@@ -383,6 +445,9 @@ void MasterPeer::updatePeerCounter(e_UpdatePeerCounter method)
     mutexUnlock();
 }
 
+
+/*-------------------------------- Thread definitions -----------------------------------*/
+
 void* thd_listenForPeers(void* args)
 {
     Peer newPeer = Peer();
@@ -447,6 +512,16 @@ void* thd_listenForPeers(void* args)
     return nullptr;
 }
 
+/**
+ * @brief   Thread Handler waits for messages from an individual child peer
+ * 
+ * @note    There're several system calls for this functionality, 
+ *          check: https://man7.org/linux/man-pages/man2/recv.2.html
+ * 
+ * @param   args - holds peer ID
+ * 
+ * @retval  nullptr - when loop breaks
+ */
 void* thd_handlePeer(void* args)
 {
     int peerID = *((int*)args);
@@ -463,17 +538,16 @@ void* thd_handlePeer(void* args)
     {
         int readBytes = recv(targetPeer->getSockFD(), readBuff, MAX_MSG_SIZE, 0);
 
-        if (readBytes < 0)  // Error
+        if (readBytes == -1)  // Error occurs
         {
-            // add code here!!!
-            APP_ERROR_PRINT("Error detected!");
+            // how to handle the error??
+            APP_ERROR_PRINT("Error detected! Start to kill thread and exit...");
+            masterPeer->terminatePeer(peerID);
+            pthread_exit(NULL);
         }
-        else if (readBytes == 0) // ???
+        else if (readBytes == 0) // EOF detected: Child peer closes the connection (TCP stream socket).
         {
-            // EOF detected:
-            // 1. Everything has been read.
-            // 2. A peer has disconnected without informing
-            APP_ERROR_PRINT("EOF detected! Re-checking connection with peer ID[%d]", peerID);
+            APP_ERROR_PRINT("EOF detected! Peer ID[%d] has diconnected!", peerID);
             
             int cnt = 0;
             do {
@@ -483,9 +557,9 @@ void* thd_handlePeer(void* args)
                 else {
                     break;
                 }
-            } while (cnt < 5);
+            } while (cnt < 2);
             
-            if (cnt == 5) {
+            if (cnt >= 2) {
                 APP_ERROR_PRINT("peer ID[%d] can't be connected, remove peer & destroy thread!!!", peerID);
                 masterPeer->removePeer(peerID);
                 break;
@@ -500,7 +574,8 @@ void* thd_handlePeer(void* args)
             if (!strcmp(readBuff, TERMINATE_CODE))
             {
                 /* Child peer wants to disconnect. It will do the cleaning in its side. Here we should clear our side only */
-                masterPeer->removePeer(peerID);
+                APP_PRINT("\nPeer ID[%d] wants to disconnect...In some next loops we will recv() failed, then remove it from the list...\n", peerID);
+                //masterPeer->removePeer(peerID);
             }
             else if (!strcmp(readBuff, CHECK_CONNECT_CODE))
             {
@@ -519,4 +594,18 @@ void* thd_handlePeer(void* args)
     APP_DEBUG_PRINT("Thread received msg for ID[%d] failed", peerID);
 
     return nullptr;
+}
+
+/**
+ * @brief   Thread that monitors every peer's connection in the list
+ * @note    Should we need it?
+ * @retval  NULL - when loop breaks
+ */
+void* thd_monitorPeer(void* args)
+{
+
+    while (1)
+    {
+
+    }
 }

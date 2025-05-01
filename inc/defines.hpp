@@ -31,8 +31,41 @@
 #define CHECK_CONNECT_CODE  "0x70"              /* send this code to a peer to check is it still connected or not */
 #define DUMP_LOG_DIR        "dump_log/"
 
-/* Typedef */
+/*-------------------- Typedef -----------------------------*/
 typedef struct sockaddr     SA;
 typedef struct sockaddr_in  SA_IN;
+
+/*-------------------- Structs and Enums -------------------*/
+/**
+ * @brief   Initialize address based on the kind of peer
+ * @note    Refer to Peer::initAddr()
+ */
+typedef enum
+{
+    ADDR_TYPE_MASTER = 0,
+    ADDR_TYPE_CLIENT = 1,
+} e_AddrType;
+
+/**
+ * @brief   Request of message
+ */
+typedef enum
+{
+    REQ_CHECK_CONNECTION_STATUS = 0,
+    REQ_SEND_MSG = 1,
+    REQ_INFORM_TERMINATION = 2, // not used yet
+    REQ_ACKING_MSG = 3, // not used yet
+    REQ_MAX,
+} e_Request;
+
+/**
+ * @brief   Message structure for Peer communication  
+ */
+typedef struct
+{
+    e_Request req;
+    char data[MAX_MSG_SIZE];
+} PeerMsg_t;
+
 
 #endif // _DEFINES_HPP_

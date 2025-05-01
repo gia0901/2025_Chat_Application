@@ -8,7 +8,6 @@ Peer::Peer()
     id = -1;
     portNum = -1;
     addr = {0};
-    addrInStr = "";
 }
 
 Peer::~Peer()
@@ -39,11 +38,41 @@ void Peer::setSockFD(int sockfd)
     this->sockfd = sockfd;
 }
 
-void Peer::initAddr(void)
+int Peer::initAddr(e_AddrType addrType)
 {
-    addr.sin_family       = AF_INET;            /* Ipv4 address family */
-    addr.sin_addr.s_addr  = INADDR_ANY;         /* Address: 0.0.0.0 -> Bind to ALL available network interfaces */
-    addr.sin_port         = htons(portNum);     /* Setup Port Number */
+    int ret = 0;
+
+    this->addr.sin_family       = AF_INET;            /* Ipv4 address family */
+    this->addr.sin_port         = htons(portNum);     /* Setup Port Number */
+
+    switch (addrType) {
+        case ADDR_TYPE_MASTER:
+        {
+            this->addr.sin_addr.s_addr  = INADDR_ANY;         /* Address: 0.0.0.0 -> Bind to ALL available network interfaces */
+            break;
+        }
+        case ADDR_TYPE_CLIENT:
+        {
+            if (addrInStr.empty()) {
+                APP_DEBUG_PRINT("addrInStr is empty!!! Cannot convert into 'struct sockaddr_in' form!!!");
+                ret = -1;
+            }
+            else {  /* Init address for client peer */
+                if ((inet_pton(AF_INET, addrInStr.c_str(), &this->addr.sin_addr)) < 0) {
+                    APP_DEBUG_PRINT("inet_pton failed!");
+                    ret = -1;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            APP_DEBUG_PRINT("Invalid addrType!");
+            ret = -1;
+            break;   
+        }
+    }
+    return ret;
 }
 
 int Peer::bindSocket(void)
@@ -59,7 +88,7 @@ int Peer::listenSocket(void)
 {
     int ret = 0;
 
-    ret = listen(sockfd, MAX_BACKLOGS);
+    ret = listen(this->sockfd, MAX_BACKLOGS);
 
     return ret;
 }

@@ -28,7 +28,7 @@
 
 #define APP_ERROR_PRINT(fmt,...)    do { \
                                         if (ENABLE_ERROR_PRINT) { \
-                                            printf("[%s][pid:%d[@%s][ERROR: %d - %s]: " fmt, __func__, getPID(), getThreadName(), errno, strerror(errno), ##__VA_ARGS__); \
+                                            printf("[%s][pid:%d[@%s][ERROR: %d:%s]: " fmt, __func__, getPID(), getThreadName(), errno, strerror(errno), ##__VA_ARGS__); \
                                             printf("\n"); \
                                         } \
                                     } while(0)

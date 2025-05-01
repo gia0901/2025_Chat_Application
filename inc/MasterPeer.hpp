@@ -16,8 +16,8 @@ private:
     std::vector<Peer> peerList;
     static MasterPeer* pInstance;
     int peerCounter;
-    pthread_t listenerThread;
     pthread_mutex_t masterMutex;
+    pthread_t listenerThread;
     pthread_t peerHandlerThread[MAX_CONNECTIONS+1];
 
 public:
@@ -60,17 +60,17 @@ public:
     void listPeer(void);
 
     pthread_t* getListenerThreadID(void);
-
     pthread_t* getPeerHandlerThreadID(int id);
 
     Peer getChildPeer(int id);
     Peer* getChildPeerPtr(int id);
-
 };
 
 
 void* thd_listenForPeers(void* args);
 
 void* thd_handlePeer(void* args);
+
+void* thd_monitorPeer(void* args);
 
 #endif // _MASTER_PEER_HPP_

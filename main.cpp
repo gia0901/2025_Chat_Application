@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 {
     clearScreen();
 
-    /* Local variable */
+    /* Local variables */
     int ret = 0;
     std::vector<std::string> user_cmd;
 
@@ -51,23 +51,27 @@ int main(int argc, char* argv[])
         user_cmd = readInput();
 
         // User communicate
-        if(user_cmd[0] == "help")
+        if (user_cmd[0] == "help")
         {
             App_printMenu();
         }
-        else if(user_cmd[0] == "connect")
+        else if (user_cmd[0] == "connect")
         {
             if (user_cmd.size() == 3)
                 masterPeer->connectToPeer(user_cmd[1], user_cmd[2]);
             else
                 APP_PRINT("\nWrong input. Please try again!\n");
         }
-        else if(user_cmd[0] == "send")
+        else if (user_cmd[0] == "send")
         {
             if (user_cmd.size() == 3)
                 masterPeer->sendMessage(std::stoi(user_cmd[1]), user_cmd[2]);
             else
                 APP_PRINT("\nWrong input. Please try again!\n");
+        }
+        else if (user_cmd[0] == "terminate")
+        {
+            ret = masterPeer->terminatePeer(std::stoi(user_cmd[1]));
         }
         else if (user_cmd[0] == "list")
         {
@@ -83,6 +87,11 @@ int main(int argc, char* argv[])
         {
             APP_PRINT("\nWrong command. Please try again!\n");
             continue;
+        }
+
+        if (ret < 0)
+        {
+            APP_PRINT("\nFailed to execute request!!!\n");
         }
     }
 

@@ -42,7 +42,7 @@ public:
     void setSockFD(int sockfd);
     void closeSockFd(void);
     
-    void initAddr(void);
+    int initAddr(e_AddrType addrType);
     void setAddr(SA_IN addr);
     SA_IN  getAddr(void);
     SA_IN* getAddrPtr(void);
