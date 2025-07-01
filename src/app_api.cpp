@@ -2,7 +2,7 @@
 #include "app_api.hpp"
 #include "utils.hpp"
 
-void App_printMenu(void)
+void App_PrintMenu(void)
 {
     APP_PRINT("\n******************************** Chat Application *****************************\n");
     APP_PRINT("\nUse the commands below:\n");

@@ -7,11 +7,10 @@ MasterPeer *masterPeer;
 
 int main(int argc, char* argv[])
 {
-    clearScreen();
-
-    /* Local variables */
     int ret = 0;
     std::vector<std::string> user_cmd;
+
+    clearScreen();
 
     /* 0. Get port number from environment parameter */
     if (argc < 2)
@@ -40,7 +39,7 @@ int main(int argc, char* argv[])
     }
 
     /* 4. Run Menu Application */
-    App_printMenu();
+    App_PrintMenu();
 
     /* 5. Handle User Requests */
     while(1)
@@ -53,7 +52,7 @@ int main(int argc, char* argv[])
         // User communicate
         if (user_cmd[0] == "help")
         {
-            App_printMenu();
+            App_PrintMenu();
         }
         else if (user_cmd[0] == "connect")
         {
