@@ -1,9 +1,8 @@
-#include "MasterPeer.hpp"
 #include "app_api.hpp"
+#include "MasterPeer.hpp"
 #include "utils.hpp"
 
-void App_PrintMenu(void)
-{
+void AppAPI::PrintMenu(void) {
     APP_PRINT("\n******************************** Chat Application *****************************\n");
     APP_PRINT("\nUse the commands below:\n");
     APP_PRINT("1. help                  : display user interface options\n");

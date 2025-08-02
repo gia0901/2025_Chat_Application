@@ -7,30 +7,14 @@
 
 #include "defines.hpp"
 
-/* Socket file descriptor information */
-typedef struct SocketFD
-{
-    int domain;  
-    int type;
-    int protocol;
-}sfd_t;
-
-/* Peer class */
-class Peer
-{
+class Peer {
 private:
     int sockfd;
-    
-    sfd_t sock_config;
-
     int id;
-    
     int portNum;
-
-    SA_IN addr;    /* sockaddr_in: internet socket for ipv4 address */
-
+    sfd_t sock_config;
+    SA_IN addr;                         /* sockaddr_in: internet socket for ipv4 address */
     socklen_t addrSize = sizeof(addr);
-    
     std::string addrInStr;
 
 public:
@@ -42,7 +26,7 @@ public:
     void setSockFD(int sockfd);
     void closeSockFd(void);
     
-    int initAddr(e_AddrType addrType);
+    int initAddr(eAddrType addrType);
     void setAddr(SA_IN addr);
     SA_IN  getAddr(void);
     SA_IN* getAddrPtr(void);

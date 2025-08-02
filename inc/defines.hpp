@@ -18,33 +18,31 @@
 #include <sys/prctl.h>
 
 /* Definitions */
-#define MAX_CONNECTIONS     10
-#define MAX_BACKLOGS        MAX_CONNECTIONS     /* Waiting queue (when accepting new connections) */
-#define MAX_MSG_SIZE        256
+constexpr int MAX_CONNECTIONS   = 10;
+constexpr int MAX_BACKLOGS      = MAX_CONNECTIONS;              /* Waiting queue (when accepting new connections) */
+constexpr int MAX_MSG_SIZE      = 256;
 
-#define IPV4_ADDR_LENGTH    16
+constexpr int IPV4_ADDR_LENGTH  = 16;
+constexpr int LOG_BUF_SIZE      = 500;
 
-#define LOG_BUF_SIZE        500
-
-#define PROCESS_COMM_DIR    "/proc/self/comm"   /* Read this to get process name (Comm) */
-#define TERMINATE_CODE      "0x69"              /* if a peer sends this code, means it wants to disconnect */
-#define CHECK_CONNECT_CODE  "0x70"              /* send this code to a peer to check is it still connected or not */
-#define DUMP_LOG_DIR        "dump_log/"
+constexpr const char* PROCESS_COMM_DIR   = "/proc/self/comm";   /* Read this to get process name (Comm) */
+constexpr const char* TERMINATE_CODE     = "0x69";              /* if a peer sends this code, means it wants to disconnect */
+constexpr const char* CHECK_CONNECT_CODE = "0x70";              /* send this code to a peer to check is it still connected or not */
+constexpr const char* DUMP_LOG_DIR       = "dump_log/";
 
 /*-------------------- Typedef -----------------------------*/
-typedef struct sockaddr     SA;
-typedef struct sockaddr_in  SA_IN;
+using SA    = struct sockaddr;
+using SA_IN = struct sockaddr_in;
 
 /*-------------------- Structs and Enums -------------------*/
 /**
  * @brief   Initialize address based on the kind of peer
  * @note    Refer to Peer::initAddr()
  */
-typedef enum
-{
-    ADDR_TYPE_MASTER = 0,
-    ADDR_TYPE_CLIENT = 1,
-} e_AddrType;
+enum class eAddrType {
+    MASTER = 0,
+    CLIENT = 1,
+};
 
 /**
  * @brief   Request of message
@@ -61,11 +59,18 @@ typedef enum
 /**
  * @brief   Message structure for Peer communication  
  */
-typedef struct
-{
+typedef struct {
     e_Request req;
     char data[MAX_MSG_SIZE];
 } PeerMsg_t;
 
+/**
+ * @brief   Socket file descriptor information
+ */
+typedef struct SocketFD {
+    int domain;  
+    int type;
+    int protocol;
+} sfd_t;
 
 #endif // _DEFINES_HPP_

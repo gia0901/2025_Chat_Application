@@ -3,31 +3,27 @@
 char thread_name_buff[24];
 
 // Return Process ID (PID)
-int getPID(void)
-{
+int getPID(void) {
     return getpid();
 }
 
 
 // Return Process Name
-const char* getComm(void)
-{
+const char* getComm(void) {
     int fd;
     int read_bytes;
     char name_buffer[24];
     const char* proc_name;
 
     fd = open(PROCESS_COMM_DIR, O_RDONLY);
-    if (fd < 0)
-    {
+    if (fd < 0) {
         APP_DEBUG_PRINT("Cannot open file %s - Error number: %d", PROCESS_COMM_DIR, errno);
         proc_name = "ERROR";
         return proc_name;
     }
 
     read_bytes = read(fd, name_buffer, 24);
-    if (read_bytes < 0)
-    {
+    if (read_bytes < 0) {
         APP_DEBUG_PRINT("Cannot read file %s - Error number: %d", PROCESS_COMM_DIR, errno);
         proc_name = "ERROR";
         return proc_name;
@@ -43,35 +39,29 @@ const char* getComm(void)
 }
 
 // Return thread name
-const char* getThreadName(void)
-{
-    if (thread_name_buff[0] == 0)
-    {
+const char* getThreadName(void) {
+    if (thread_name_buff[0] == 0) {
         prctl(PR_GET_NAME, thread_name_buff, 0L, 0L, 0L);
     }
     return (const char*)thread_name_buff;
 }
 
-std::vector<std::string> readInput(void)
-{
+std::vector<std::string> readInput(void) {
     char cmd_buff[50];
 
     std::vector<std::string> input;
 
-    if(fgets(cmd_buff,sizeof(cmd_buff),stdin) != NULL)
-    {
+    if(fgets(cmd_buff,sizeof(cmd_buff),stdin) != NULL) {
         //cmd_buff[strcspn(cmd_buff, "\n")] = 0;
 
         std::istringstream ss(cmd_buff);
         std::string token;
         int tokenIdx = 0;
 
-        while (ss >> token && tokenIdx < 2)
-        {
+        while (ss >> token && tokenIdx < 2) {
             input.push_back(token);
             tokenIdx++;
-            if (tokenIdx == 2)
-            {
+            if (tokenIdx == 2) {
                 std::getline(ss, token);
                 
                 /* First character is ' ', so remove it */
@@ -94,8 +84,7 @@ std::vector<std::string> readInput(void)
     return input;
 }
 
-void outputError(int errNum, const char* format, va_list ap)
-{
+void outputError(int errNum, const char* format, va_list ap) {
     // char buf[LOG_BUF_SIZE], userMsg[LOG_BUF_SIZE];
 
     // /* Fill user msg buffer */
@@ -110,8 +99,7 @@ void outputError(int errNum, const char* format, va_list ap)
     // fflush(stderr);
 }
 
-void usageError(const char* format, ...)
-{
+void usageError(const char* format, ...) {
     va_list argList;
 
     va_start(argList, format);
@@ -125,8 +113,7 @@ void usageError(const char* format, ...)
     exit(1);            /* Exit with error */
 }
 
-void errExit(const char* format, ...)
-{
+void errExit(const char* format, ...) {
     va_list argList;
 
     va_start(argList, format);
@@ -137,7 +124,6 @@ void errExit(const char* format, ...)
     va_end(argList);
 }
 
-void clearScreen(void)
-{
+void clearScreen(void) {
     system("clear");
 }

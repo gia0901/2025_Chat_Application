@@ -9,8 +9,7 @@ typedef enum {
     eRESET     = 2,
 } e_UpdatePeerCounter;
 
-class MasterPeer
-{
+class MasterPeer {
 private:
     Peer* masterPeer;
     std::vector<Peer> peerList;
@@ -22,8 +21,7 @@ private:
 
 public:
     MasterPeer();
-    MasterPeer(const MasterPeer& source) = delete;  /* Delete copy-constructor */
-
+    MasterPeer(const MasterPeer& source) = delete;  /* (Singleton) Delete copy-constructor */
     ~MasterPeer();
 
     static MasterPeer* getInstance(void);
