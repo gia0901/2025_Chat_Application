@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
         APP_DEBUG_PRINT("Wrong syntax. Try: ./chat_app <port_num>");
         exit(EXIT_FAILURE);
     }
-    int port = atoi(argv[1]);
+    int port = std::stoi(argv[1]);
 
     /* 1. Get Master Peer instance */  
     masterPeer = MasterPeer::getInstance();
