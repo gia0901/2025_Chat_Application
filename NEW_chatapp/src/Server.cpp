@@ -121,19 +121,61 @@ void ChatServer::handle_client_read(int fd) {
     ClientInfo& client = clients.at(fd);
     client.iBuff.append(buff, buff + n);
 
+    // analyze each line and release the iBuff
+    for (auto& line : split_lines(client.iBuff)) {
+        std::istringstream iss(line);
+        std::string cmd;
+        iss >> cmd;
+        /*  Example cmd:
+            1: REGISTER <my_id>
+            2: SEND <target_id> <message>
+        */
+        if (cmd == "REGISTER") {
+            std::string id;
+            iss >> id;
+            on_register(fd, id);
+        }
+        else if (cmd == "SEND") {
+            std::string target; iss >> target;
+            std::string msg;    std::getline(iss, msg);
+            
+            if (!msg.empty() && msg.front() == ' ')
+                msg.erase(0, 1);
 
+            on_send(fd, target, msg);
+        }
+        else {
+            std::string err = proto::make_error("Invalid command");
+            ::send(fd, err.data(), err.size(), 0);  // raw sending to client
+        }
+    }
 }
 
+void ChatServer::on_register(int fd, const std::string& id) {
+    if (!id.empty()) {
+        std::string err = proto::make_error("Empty ID");
+        ::send(fd, err.data(), err.size(), 0);
+        return;
+    }
+
+    
+}
 
 
 std::vector<std::string> ChatServer::split_lines(std::string& buffer) {
     std::vector<std::string> lines;
     size_t pos = 0;
     for (;;) {
-        size_t new_line = buffer.find('\n', pos);
-        if (new_line == std::string::npos)
+        size_t newline_pos = buffer.find('\n', pos);
+        if (newline_pos == std::string::npos)
             break;
         
-        lines.emplace_back(buffer.substr(pos, new_line-pos));
+        lines.emplace_back(buffer.substr(pos, newline_pos-pos));
+        pos = newline_pos + 1;
     }
+    // Release the buffer (if there's something in there)
+    if (pos > 0) {
+        buffer.erase(0, pos);
+    }
+    return lines;
 }
