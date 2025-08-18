@@ -1,3 +1,7 @@
+***CHAT APPLICATION***
+# How to run this app
+
+
 # Class Explanation
 
 1) Peer: 

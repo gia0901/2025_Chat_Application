@@ -1,3 +1,4 @@
 *.o
 chat_app
 .vscode/
+build

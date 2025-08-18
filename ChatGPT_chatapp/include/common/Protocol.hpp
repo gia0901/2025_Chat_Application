@@ -7,7 +7,7 @@
 //      REGISTER <id>\n
 //      SEND <target_id> <message>\n
 //
-// Server-> client:
+// Server -> client:
 //      MSG <from_id> <message>\n
 //      ERROR <text>\n
 

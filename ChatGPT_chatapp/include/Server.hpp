@@ -18,7 +18,7 @@ private:
     };
 
     std::unordered_map<int, ClientInfo> clients;    // < fd, client_info >
-    std::unordered_map<std::string, int> id_to_fd;  // < "id", fd >
+    std::unordered_map<std::string, int> id_to_fd;  // < id, fd > --> User tự đăng ký ID, nên mới cần map này
 
     void setup_listener();
     void accept_new();

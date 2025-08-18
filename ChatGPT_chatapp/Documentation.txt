@@ -1,0 +1,12 @@
+
+1. MVP (Minimum Viable Product) (Sản phẩm khả thi tối thiểu). 
+    Đây là một khái niệm trong phát triển sản phẩm, đặc biệt là trong lĩnh vực công nghệ và khởi nghiệp, 
+    chỉ ra rằng một sản phẩm nên được phát triển với những tính năng cơ bản nhất có thể để đáp ứng nhu cầu 
+    của người dùng và có thể được phát hành ra thị trường sớm nhất có thể.
+
+2. Modern C++ stuff
+    . std::atomic<type>     : Các biến nguyên tử cho phép thực hiện các phép toán an toàn trong 
+      môi trường đa luồng mà không cần sử dụng các cơ chế đồng bộ hóa phức tạp như mutex.
+      
+    . std::thread(callback) : Khởi chạy thread kèm callback, bản chất thread C++ là wrapper của các native thread
+      (Linux: pthread_t, Windows: HANDLE)

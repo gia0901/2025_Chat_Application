@@ -1,6 +1,11 @@
 1. Tại sao sử dụng noexcept cho rất nhiều hàm trong SocketWrapper?
+- Bản chất là sử dụng Posix socket của C, nên không có exception (chỉ có errno) nào trong thư viện này. Vậy nên
+  có thể cam kết là không có exception xảy ra để compiler tối ưu hóa (inline, bỏ stack unwinding...)
 
 2. Tại sao dùng explicit cho constructor: explicit ChatServer(int port)
+- Tránh compiler cho phép implicit conversion
+- VD: 
+    ChatServer server = 8080;   <<- 8088 chuyển thành ChatServer(8088)
 
 3. fd_set và connect() ?
 An fd_set is a data structure used in conjunction with the select() or pselect() system calls
@@ -8,4 +13,4 @@ to monitor multiple file descriptors (including sockets) for readiness for I/O o
 It allows a program to efficiently manage multiple concurrent connections or I/O streams 
 without needing to create a separate thread or process for each one.
 
-
+4. 

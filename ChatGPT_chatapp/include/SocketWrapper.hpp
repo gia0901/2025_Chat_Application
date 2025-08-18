@@ -32,8 +32,8 @@ public:
         close_current_fd();
     }
 
-    ////////////////// API //////////////////
-    int fd() const noexcept {
+/////////////////////// API //////////////////////
+    int get_fd() const noexcept {
         return fd;
     }
     bool valid() const noexcept {
